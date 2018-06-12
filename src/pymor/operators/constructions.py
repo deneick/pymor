@@ -999,7 +999,6 @@ class InducedNorm(ImmutableInterface, Parametric):
     def __call__(self, U, ind=None, mu=None):
         if U.data.dtype in _complex_dtypes:
             norm_squared = self.product.pairwise_apply2(U, U, U_ind=ind, V_ind=ind, mu=mu)
-	    #np.seterr(all='raise')
             if (np.linalg.norm(norm_squared.imag) > 1e-11):
                 raise ValueError('norm is complex (square = {})'.format(norm_squared))
                 

@@ -14,7 +14,6 @@ from pymor.core.exceptions import InversionError
 from pymor.operators.interfaces import OperatorInterface
 from pymor.vectorarrays.interfaces import VectorArrayInterface
 from pymor.vectorarrays.numpy import NumpyVectorArray, NumpyVectorSpace
-from pymor.vectorarrays.numpy import _complex_dtypes
 
 
 class OperatorBase(OperatorInterface):
