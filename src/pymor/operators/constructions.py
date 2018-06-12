@@ -89,34 +89,34 @@ class LincombOperator(OperatorBase):
             R.axpy(c, op.apply(U, ind=ind, mu=mu))
         return R
 
-    def apply2(self, V, U, U_ind=None, V_ind=None, mu=None, product=None, conjugate=None):
+    def apply2(self, V, U, U_ind=None, V_ind=None, mu=None, product=None):
         if hasattr(self, '_assembled_operator'):
             if self._defaults_sid == defaults_sid():
-                return self._assembled_operator.apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product, conjugate=conjugate)
+                return self._assembled_operator.apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product)
             else:
-                return self.assemble().apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product, conjugate=conjugate)
+                return self.assemble().apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product)
         elif self._try_assemble:
-            return self.assemble().apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product, conjugate=conjugate)
+            return self.assemble().apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product)
         coeffs = self.evaluate_coefficients(mu)
-        R = self.operators[0].apply2(V, U, V_ind=V_ind, U_ind=U_ind, mu=mu, product=product, conjugate=conjugate)
+        R = self.operators[0].apply2(V, U, V_ind=V_ind, U_ind=U_ind, mu=mu, product=product)
         R *= coeffs[0]
         for op, c in izip(self.operators[1:], coeffs[1:]):
-            R += c * op.apply2(V, U, V_ind=V_ind, U_ind=U_ind, mu=mu, product=product, conjugate=conjugate)
+            R += c * op.apply2(V, U, V_ind=V_ind, U_ind=U_ind, mu=mu, product=product)
         return R
 
-    def pairwise_apply2(self, V, U, U_ind=None, V_ind=None, mu=None, product=None, conjugate=None):
+    def pairwise_apply2(self, V, U, U_ind=None, V_ind=None, mu=None, product=None):
         if hasattr(self, '_assembled_operator'):
             if self._defaults_sid == defaults_sid():
-                return self._assembled_operator.pairwise_apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product, conjugate=conjugate)
+                return self._assembled_operator.pairwise_apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product)
             else:
-                return self.assemble().pairwise_apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product, conjugate=conjugate)
+                return self.assemble().pairwise_apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product)
         elif self._try_assemble:
-            return self.assemble().pairwise_apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product, conjugate=conjugate)
+            return self.assemble().pairwise_apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product)
         coeffs = self.evaluate_coefficients(mu)
-        R = self.operators[0].pairwise_apply2(V, U, V_ind=V_ind, U_ind=U_ind, mu=mu, product=product, conjugate=conjugate)
+        R = self.operators[0].pairwise_apply2(V, U, V_ind=V_ind, U_ind=U_ind, mu=mu, product=product)
         R *= coeffs[0]
         for op, c in izip(self.operators[1:], coeffs[1:]):
-            R += c * op.pairwise_apply2(V, U, V_ind=V_ind, U_ind=U_ind, mu=mu, product=product, conjugate=conjugate)
+            R += c * op.pairwise_apply2(V, U, V_ind=V_ind, U_ind=U_ind, mu=mu, product=product)
         return R
 
     def apply_adjoint(self, U, ind=None, mu=None, source_product=None, range_product=None):
@@ -570,7 +570,7 @@ class VectorArrayOperator(OperatorBase):
                 U = U.copy(ind)
             return self._array.lincomb(U.data)
         else:
-            return NumpyVectorArray(U.dot(self._array, ind=ind, conjugate=True), copy=False)
+            return NumpyVectorArray(U.dot(self._array, ind=ind), copy=False)
 
     def apply_adjoint(self, U, ind=None, mu=None, source_product=None, range_product=None):
         assert U in self.range
@@ -578,7 +578,7 @@ class VectorArrayOperator(OperatorBase):
         assert range_product is None or range_product.source == range_product.range == self.range
         if not self.transposed:
             if range_product:
-                ATPrU = NumpyVectorArray(range_product.apply2(self._array, U, U_ind=ind, conjugate = True).T, copy=False)
+                ATPrU = NumpyVectorArray(range_product.apply2(self._array, U, U_ind=ind).T, copy=False)
             else:
                 ATPrU = NumpyVectorArray(self._array.dot(U, o_ind=ind).T, copy=False)
             if source_product:
@@ -998,14 +998,14 @@ class InducedNorm(ImmutableInterface, Parametric):
 
     def __call__(self, U, ind=None, mu=None):
         if U.data.dtype in _complex_dtypes:
-            norm_squared = self.product.pairwise_apply2(U, U, U_ind=ind, V_ind=ind, mu=mu, conjugate=True)
+            norm_squared = self.product.pairwise_apply2(U, U, U_ind=ind, V_ind=ind, mu=mu)
 	    #np.seterr(all='raise')
             if (np.linalg.norm(norm_squared.imag) > 1e-11):
                 raise ValueError('norm is complex (square = {})'.format(norm_squared))
                 
             norm_squared = norm_squared.real
         else:
-            norm_squared = self.product.pairwise_apply2(U, U, U_ind=ind, V_ind=ind, mu=mu, conjugate=True)
+            norm_squared = self.product.pairwise_apply2(U, U, U_ind=ind, V_ind=ind, mu=mu)
         
         if self.tol > 0:
             norm_squared = np.where(np.logical_and(0 > norm_squared, norm_squared > - self.tol),

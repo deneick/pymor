@@ -313,7 +313,7 @@ class NumpyVectorArray(VectorArrayInterface):
             else:
                 self._array[ind] += (B * alpha)
 
-    def dot(self, other, ind=None, o_ind=None, conjugate = None):
+    def dot(self, other, ind=None, o_ind=None):
         assert self.check_ind(ind)
         assert other.check_ind(o_ind)
         assert self.dim == other.dim
@@ -329,19 +329,12 @@ class NumpyVectorArray(VectorArrayInterface):
         B = other._array[:other._len] if o_ind is None else \
             other._array[o_ind] if hasattr(o_ind, '__len__') else other._array[o_ind:o_ind + 1]
 
-        #if B.dtype in _complex_dtypes:
-        #   return A.dot(B.conj().T)
         if A.dtype in _complex_dtypes:
-            if conjugate is None:
-                raise "Das geht so nicht"
-            if conjugate:
-                return A.conj().dot(B.T)
-            else:
-                return A.dot(B.T)
+            return A.conj().dot(B.T)
         else:
             return A.dot(B.T)
 
-    def pairwise_dot(self, other, ind=None, o_ind=None, conjugate = None):
+    def pairwise_dot(self, other, ind=None, o_ind=None):
         assert self.check_ind(ind)
         assert other.check_ind(o_ind)
         assert self.dim == other.dim
@@ -359,13 +352,7 @@ class NumpyVectorArray(VectorArrayInterface):
             other._array[o_ind] if hasattr(o_ind, '__len__') else other._array[o_ind:o_ind + 1]
 
         if B.dtype in _complex_dtypes:
-            if conjugate is None:
-                raise "Das geht so nicht"
-            if conjugate:
-                return np.sum(A.conj() * B, axis=1)
-            else:
-                return np.sum(A * B, axis=1)
-            #np.sum(A * B.conj(), axis=1)
+            return np.sum(A.conj() * B, axis=1)
         else:
             return np.sum(A * B, axis=1)
 

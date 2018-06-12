@@ -24,23 +24,18 @@ class OperatorBase(OperatorInterface):
     from this class.
     """
 
-    def apply2(self, V, U, U_ind=None, V_ind=None, mu=None, product=None, conjugate = None):
+    def apply2(self, V, U, U_ind=None, V_ind=None, mu=None, product=None):
         mu = self.parse_parameter(mu)
         assert isinstance(V, VectorArrayInterface)
         assert isinstance(U, VectorArrayInterface)
         U_ind = None if U_ind is None else np.array(U_ind, copy=False, dtype=np.int, ndmin=1)
         V_ind = None if V_ind is None else np.array(V_ind, copy=False, dtype=np.int, ndmin=1)
-	"""if V.dtype in _complex_dtypes:
-            if conjugate is None:
-                raise "das geht so nicht"
-            if conjugate:
-                V = V.conj"""
         AU = self.apply(U, ind=U_ind, mu=mu)
         if product is not None:
             AU = product.apply(AU)
-        return V.dot(AU, ind=V_ind, conjugate = True)#AU.dot(V, o_ind = V_ind).T#
+        return V.dot(AU, ind=V_ind)
 
-    def pairwise_apply2(self, V, U, U_ind=None, V_ind=None, mu=None, product=None, conjugate = None):
+    def pairwise_apply2(self, V, U, U_ind=None, V_ind=None, mu=None, product=None):
         mu = self.parse_parameter(mu)
         assert isinstance(V, VectorArrayInterface)
         assert isinstance(U, VectorArrayInterface)
@@ -49,15 +44,10 @@ class OperatorBase(OperatorInterface):
         lu = len(U_ind) if U_ind is not None else len(U)
         lv = len(V_ind) if V_ind is not None else len(V)
         assert lu == lv
-        """if V.dtype in _complex_dtypes:
-            if conjugate is None:
-                raise "Das geht so nicht"
-            if conjugate:
-                V = V.conj"""
         AU = self.apply(U, ind=U_ind, mu=mu)
         if product is not None:
             AU = product.apply(AU)
-        return V.pairwise_dot(AU, ind=V_ind, conjugate = True)
+        return V.pairwise_dot(AU, ind=V_ind)
 
     def jacobian(self, U, mu=None):
         if self.linear:
@@ -230,11 +220,11 @@ class OperatorBase(OperatorInterface):
                         return VectorArrayOperator(V, transposed=False, name=name)
                 elif product is None:
                     from pymor.operators.numpy import NumpyMatrixOperator
-                    return NumpyMatrixOperator(self.apply2(range_basis, source_basis, conjugate = True), name=name)
+                    return NumpyMatrixOperator(self.apply2(range_basis, source_basis), name=name)
                 else:
                     from pymor.operators.numpy import NumpyMatrixOperator
                     V = self.apply(source_basis)
-                    return NumpyMatrixOperator(product.apply2(range_basis, V, conjugate = True), name=name)
+                    return NumpyMatrixOperator(product.apply2(range_basis, V), name=name)
         else:
             self.logger.warn('Using inefficient generic projection operator')
             return ProjectedOperator(self, range_basis, source_basis, product, name=name)
