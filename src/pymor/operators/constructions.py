@@ -20,7 +20,7 @@ from pymor.operators.interfaces import OperatorInterface
 from pymor.parameters.base import Parametric
 from pymor.parameters.interfaces import ParameterFunctionalInterface
 from pymor.vectorarrays.interfaces import VectorArrayInterface, VectorSpace
-from pymor.vectorarrays.numpy import NumpyVectorArray, NumpyVectorSpace
+from pymor.vectorarrays.numpy import NumpyVectorArray, NumpyVectorSpace, _complex_dtypes
 
 
 class LincombOperator(OperatorBase):
@@ -41,6 +41,7 @@ class LincombOperator(OperatorBase):
     """
 
     def __init__(self, operators, coefficients, solver_options=None, name=None):
+        operators, coefficients = zip(*[(o, c) for o, c in zip(operators,coefficients) if o is not None])
         assert len(operators) > 0
         assert len(operators) == len(coefficients)
         assert all(isinstance(op, OperatorInterface) for op in operators)
@@ -577,7 +578,7 @@ class VectorArrayOperator(OperatorBase):
         assert range_product is None or range_product.source == range_product.range == self.range
         if not self.transposed:
             if range_product:
-                ATPrU = NumpyVectorArray(range_product.apply2(self._array, U, U_ind=ind).T, copy=False)
+                ATPrU = NumpyVectorArray(range_product.apply2(self._array, U, U_ind=ind, conjugate = True).T, copy=False)
             else:
                 ATPrU = NumpyVectorArray(self._array.dot(U, o_ind=ind).T, copy=False)
             if source_product:
