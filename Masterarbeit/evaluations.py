@@ -1,3 +1,22 @@
+"""
+test berechnet und visualisiert die approximierte Loesung bzgl fester Basisgroesse
+
+evaluation/evaluation_neumann berechnet den relativen Fehler abhaengig von der Basisgroesse
+
+ungleichung berechnet die Genauigkeit der apriori Abschaetzung
+
+accuracy berechnet den relativen Fehler abhaengig von der gewuenschten Genauigkeit gemaess des adaptiven Algos
+
+kerr/kerr_neumann berechnet den relativen Fehler abhaengig von k
+
+cerr berechnet den relativen Fehler abhaengig von c(dem lokalen Robin-Parameter)
+
+
+zum plotten, setze plot=True
+it = Anzahl der Wiederholungen fuer die Statistik
+lim = maximale Basisgroesse
+"""
+
 from problems import *
 import numpy as np
 from pymor.basic import *
@@ -179,19 +198,17 @@ def accuracy(it, num_testvecs, k, boundary, save, plot = False):
 		plt.gca().invert_xaxis()
 		plt.show()
 
-def test(transfer = 'robin', c=6):
-	k=6	
-	#k = np.pi*np.sqrt(2)*10/4
-	mus = (k, -1j*k, -1j*k)
+def test(transfer = 'robin',boundary = 'dirichlet', n=15,k=6., c=6., title = 'test'):
+	mus = (k, -1j*k, -1j*c)
 	mu_glob = {'c': mus[1], 'k': mus[0]}
-	p = helmholtz(boundary = 'robin')
+	p = helmholtz(boundary = boundary)
 	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
-	basis = create_bases2(gq,lq,15,transfer = transfer)
+	basis = create_bases2(gq,lq,n,transfer = transfer)
 	ru = reconstruct_solution(gq,lq,basis)
 	d = gq["d"]
 	u = d.solve(mu_glob)
 	dif = u-ru
-	d.visualize((dif.real, dif.imag, u.real, u.imag, ru.real, ru.imag), legend = ('dif.real', 'dif.imag', 'u.real', 'u.imag', 'ru.real', 'ru.imag'), separate_colorbars = True)
+	d.visualize((dif.real, dif.imag, u.real, u.imag, ru.real, ru.imag), legend = ('dif.real', 'dif.imag', 'u.real', 'u.imag', 'ru.real', 'ru.imag'), separate_colorbars = True, title = title)
 
 def kerr(it, n, boundary, save, plot = False):
 	#k/err
@@ -272,7 +289,7 @@ def cerr(it, n, comp, k, c, boundary, save, plot = False):
 		im = 1j
 	else:
 		im = 1
-	rang = np.arange(-10.,10.,1.)
+	rang = np.arange(-2.,2.,1.)
 	p = helmholtz(boundary = boundary)
 	for c_loc in rang:
 		print c_loc

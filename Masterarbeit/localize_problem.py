@@ -68,7 +68,10 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 
 	global_quantities["p"] = p
 	
-	dmask = data['boundary_info'].dirichlet_mask(2)
+	try: 
+		dmask = data['boundary_info'].dirichlet_mask(2)
+	except KeyError:
+		dmask = None
 	subspaces, subspaces_per_codim = build_subspaces(*partition_any_grid(grid, num_intervals=(coarse_grid_resolution, coarse_grid_resolution), dmask = dmask))
 	global_quantities["subspaces"] = subspaces
 	global_quantities["subspaces_per_codim"] = subspaces_per_codim
@@ -143,8 +146,6 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 			local_solution_pou = pou[range_space](local_solution)
 			ldict["local_solution_robin"] = local_solution_pou #klappt nicht fuer g!=0 !!
 
-
-
 			if calT:
 				#Transfer-Matrix:
 				T_source_size = transop_robin.source.dim
@@ -185,8 +186,7 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 
 			range_l2 = localizer.localize_operator(full_l2_product, range_space, range_space)
 			range_h1 = localizer.localize_operator(full_h1_product, range_space, range_space)
-		
-			
+
 			ldict["omega_star_energy_product"] = omegastar_h1_product
 			ldict["range_product"] = range_h1
 
