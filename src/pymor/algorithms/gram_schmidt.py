@@ -56,7 +56,7 @@ def gram_schmidt(A, product=None, atol=1e-13, rtol=1e-13, offset=0, find_duplica
 
     if copy:
         A = A.copy()
-    
+
     # main loop
     remove = []
     for i in xrange(offset, len(A)):
@@ -91,7 +91,6 @@ def gram_schmidt(A, product=None, atol=1e-13, rtol=1e-13, offset=0, find_duplica
                     if j in remove:
                         continue
                     if product is None:
-			#import pdb; pdb.set_trace()
                         p = A.pairwise_dot(A, ind=j, o_ind=i, conjugate = True)[0]
                     else:
                         p = product.pairwise_apply2(A, A, V_ind=j, U_ind=i, conjugate = True)[0]
@@ -114,7 +113,6 @@ def gram_schmidt(A, product=None, atol=1e-13, rtol=1e-13, offset=0, find_duplica
 
     if remove:
         A.remove(remove)
-    #import pdb; pdb.set_trace()
     if check:
         if product:
             error_matrix = product.apply2(A, A, V_ind=range(offset, len(A)), conjugate = True)
