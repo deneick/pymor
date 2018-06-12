@@ -197,7 +197,7 @@ def kerr(it, n, boundary, save, plot = False):
 	#k/err
 	err_d =[]
 	err_r = []
-	rang = np.arange(0.,20.,.5)
+	rang = np.arange(0.,20.,.1)
 	p = helmholtz(boundary = boundary)
 	for k in rang:
 		print k
@@ -272,7 +272,7 @@ def cerr(it, n, comp, k, c, boundary, save, plot = False):
 		im = 1j
 	else:
 		im = 1
-	rang = np.arange(-100,100,1.)
+	rang = np.arange(-10.,10.,1.)
 	p = helmholtz(boundary = boundary)
 	for c_loc in rang:
 		print c_loc

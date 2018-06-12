@@ -8,6 +8,7 @@ import scipy
 from constants import *
 
 def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None, target_accuracy = 1e-3):
+	#adaptive Basiserstellung
 	if testlimit is None:
 		print "calculating constants"
 		#calculate_lambda_min(gq, lq)
@@ -60,6 +61,7 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 	return bases
 
 def create_bases2(gq, lq, basis_size, transfer = 'dirichlet'):
+	#Basiserstellung mit Basisgroesse
 	print "creating bases"
 	bases = {}
 	for space in gq["spaces"]:

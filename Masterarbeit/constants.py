@@ -1,9 +1,8 @@
 from problems import *
-from my_discretize_elliptic_cg import discretize_elliptic_cg
+from pymor.discretizers.elliptic import discretize_elliptic_cg
 from localizer import NumpyLocalizer
 from partitioner import build_subspaces, partition_any_grid
 from pymor.discretizations.basic import StationaryDiscretization
-from my_discretize_elliptic_cg import discretize_elliptic_cg
 from pou import *
 from discrete_pou import *
 from lrb_operator_projection import LRBOperatorProjection

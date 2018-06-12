@@ -1,8 +1,8 @@
-from my_discretize_elliptic_cg import discretize_elliptic_cg
 from localizer import NumpyLocalizer
 from partitioner import build_subspaces, partition_any_grid
 from pou import *
 from discrete_pou import *
+from pymor.discretizers.elliptic import discretize_elliptic_cg
 from pymor.discretizations.basic import StationaryDiscretization
 from pymor.operators.numpy import NumpyGenericOperator
 #from pymor.operators.constructions import induced_norm, LincombOperator
@@ -75,7 +75,6 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 	localizer = NumpyLocalizer(d.solution_space, subspaces['dofs'])
 	global_quantities["localizer"] = localizer
 	pou = localized_pou(subspaces, subspaces_per_codim, localizer, coarse_grid_resolution, grid)
-	global_quantities["pou"] = pou ###
 	spaces = [subspaces[s_id]["env"] for s_id in subspaces_per_codim[2]]
 	global_quantities["spaces"] = spaces
 
@@ -89,18 +88,6 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 			ldict = {}
 			local_quantities[space] = ldict
 
-			ldict["omega_star_has_boundary"] = True##
-			if xpos >= 2 and xpos <= coarse_grid_resolution -4:
-				if ypos >= 2 and ypos <= coarse_grid_resolution -4:
-					ldict["omega_star_has_boundary"] = False
-
-			ldict["omega_has_boundary"] = True
-			if xpos >= 1 and xpos <= coarse_grid_resolution -3:
-				if ypos >= 1 and ypos <= coarse_grid_resolution -3:##
-					ldict["omega_has_boundary"] = False
-		
-			ldict["pos"] = (xpos, ypos)##
-
 			source_space = subspaces[s_id]["cxenv"]
 			ldict["source_space"] = source_space
 			training_space = subspaces[s_id]["xenv"]
@@ -112,6 +99,7 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 			omega_star_space = tuple(sorted(set(training_space) | set(source_space)))
 			ldict["omega_star_space"] = omega_star_space
 		
+			#lokale Loesung mit f(Dirichlet)
 			local_op = localizer.localize_operator(global_operator, training_space, training_space)
 			local_rhs = localizer.localize_operator(global_rhs, None, training_space)
 			local_d = StationaryDiscretization(local_op, local_rhs, cache_region=None)
@@ -119,7 +107,8 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 			local_solution = localizer.to_space(local_solution, training_space, range_space)
 			local_solution = pou[range_space](local_solution)
 			ldict["local_solution_dirichlet"] = local_solution
-		
+
+			#Dirichlet Transferoperator:
 			rhsop = localizer.localize_operator(global_operator, training_space, source_space)
 			transop_dirichlet = create_dirichlet_transfer(localizer, local_op, rhsop, source_space, training_space, range_space, pou)
 			ldict["dirichlet_transfer"] = transop_dirichlet
@@ -139,10 +128,13 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 			global_dofnrsext = -100000000* np.ones(shape=(d.solution_space.dim,))
 			global_dofnrsext[ldata['grid'].parent_indices(2)] = np.array(range(ndofsext))
 			lvecext = localizer.localize_vector_array(NumpyVectorArray(global_dofnrsext), omega_star_space).data[0]
+
+			#Robin Transferoperator:
 			bilifo = NumpyMatrixOperator(lop._matrix[:,lvecext][lvecext,:])
 			transop_robin = create_robin_transfer(localizer, bilifo, source_space, omega_star_space, range_space, pou)
 			ldict["robin_transfer"] = transop_robin
 			
+			#lokale Loesung mit f(Robin)
 			lrhs = ld.rhs.assemble(mu_loc)
 			llrhs = NumpyMatrixOperator(lrhs._matrix[:,lvecext.astype(int)])
 			lrhs_f = llrhs._matrix
@@ -150,10 +142,11 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 			local_solution = localizer.to_space(local_solution, omega_star_space, range_space)
 			local_solution_pou = pou[range_space](local_solution)
 			ldict["local_solution_robin"] = local_solution_pou #klappt nicht fuer g!=0 !!
-			solution_op_robin = create_robin_solop(localizer, bilifo, source_space, omega_star_space)
+
+
 
 			if calT:
-				#create transop-Matrix
+				#Transfer-Matrix:
 				T_source_size = transop_robin.source.dim
 				T_range_size = transop_robin.range.dim
 				T_robin = np.zeros((T_range_size, T_source_size), dtype = complex)
@@ -164,7 +157,8 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 				ldict["transfer_matrix_robin"] = T_robin
 
 			if calQ:
-				#create solop-Matrix			
+				#Loesungs-Matrix:
+				solution_op_robin = create_robin_solop(localizer, bilifo, source_space, omega_star_space)		
 				Q_r_source_size = solution_op_robin.source.dim
 				Q_r_range_size = solution_op_robin.range.dim
 				Q_r = np.zeros((Q_r_range_size, Q_r_source_size), dtype = complex)
