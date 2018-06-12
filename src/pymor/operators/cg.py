@@ -119,7 +119,6 @@ class L2ProductFunctionalP1(NumpyMatrixBasedOperator):
                 xref = g.centers(1)[RI]
                 I[RI] += (self.robin_data[0](xref) * self.robin_data[1](xref))
             else:
-		#import ipdb; ipdb.set_trace()
                 xref = g.quadrature_points(1, order=self.order)[RI]
                 F = (self.robin_data[0](xref, mu=mu) * self.robin_data[1](xref, mu=mu))
                 q, w = line.quadrature(order=self.order)
