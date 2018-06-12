@@ -69,7 +69,7 @@ class L2ProductFunctionalP1(NumpyMatrixBasedOperator):
         self.order = order
         self.solver_options = solver_options
         self.name = name
-        self.build_parameter_type(inherits=(function, dirichlet_data, neumann_data))
+        self.build_parameter_type(inherits=(function, dirichlet_data, neumann_data, robin_data[0], robin_data[1]))
 
     def _assemble(self, mu=None):
         g = self.grid
@@ -119,13 +119,19 @@ class L2ProductFunctionalP1(NumpyMatrixBasedOperator):
                 xref = g.centers(1)[RI]
                 I[RI] += (self.robin_data[0](xref) * self.robin_data[1](xref))
             else:
+		#import ipdb; ipdb.set_trace()
                 xref = g.quadrature_points(1, order=self.order)[RI]
                 F = (self.robin_data[0](xref, mu=mu) * self.robin_data[1](xref, mu=mu))
                 q, w = line.quadrature(order=self.order)
                 SF = np.squeeze(np.array([1 - q, q]))
                 SF_INTS = np.einsum('ei,pi,e,i->ep', F, SF, g.integration_elements(1)[RI], w).ravel()
                 SF_I = g.subentities(1, 2)[RI].ravel()
-                I += coo_matrix((SF_INTS, (np.zeros_like(SF_I), SF_I)), shape=(1, g.size(g.dim))).toarray().ravel()
+		add_matrix = coo_matrix((SF_INTS, (np.zeros_like(SF_I), SF_I)), shape=(1, g.size(g.dim))).toarray().ravel()
+		if not np.linalg.norm(add_matrix.imag) >0:
+			add_matrix = add_matrix.real
+		else:
+			raise NotImplementedError
+		I += add_matrix
 
         if bi is not None and bi.has_dirichlet:
             DI = bi.dirichlet_boundaries(g.dim)

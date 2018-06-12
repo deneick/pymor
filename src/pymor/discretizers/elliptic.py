@@ -156,8 +156,9 @@ def discretize_elliptic_cg(analytical_problem, diameter=None, domain_discretizer
             L = Li[0]
         else:
             L = LincombOperator(operators=Li, coefficients=[1.] * len(Li), name='ellipticOperator')
-
+    #import ipdb; ipdb.set_trace()
     F = Functional(grid, p.rhs, boundary_info, dirichlet_data=p.dirichlet_data, neumann_data=p.neumann_data)
+    
 
     if grid.reference_element in (triangle, square):
         visualizer = PatchVisualizer(grid=grid, bounding_box=grid.bounding_box(), codim=2)

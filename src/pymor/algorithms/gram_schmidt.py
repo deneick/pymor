@@ -9,6 +9,7 @@ import numpy as np
 from pymor.core.defaults import defaults
 from pymor.core.exceptions import AccuracyError
 from pymor.core.logger import getLogger
+from pymor.operators.constructions import induced_norm
 
 
 @defaults('atol', 'rtol', 'reiterate', 'reiteration_threshold', 'check', 'check_tol')
@@ -55,7 +56,7 @@ def gram_schmidt(A, product=None, atol=1e-13, rtol=1e-13, offset=0, find_duplica
 
     if copy:
         A = A.copy()
-
+    
     # main loop
     remove = []
     for i in xrange(offset, len(A)):
@@ -63,7 +64,7 @@ def gram_schmidt(A, product=None, atol=1e-13, rtol=1e-13, offset=0, find_duplica
         if product is None:
             initial_norm = A.l2_norm(ind=i)[0]
         else:
-            initial_norm = np.sqrt(product.pairwise_apply2(A, A, V_ind=i, U_ind=i))[0]
+            initial_norm = induced_norm(product)(A,ind=i)[0]
 
         if initial_norm < atol:
             logger.info("Removing vector {} of norm {}".format(i, initial_norm))
@@ -90,16 +91,17 @@ def gram_schmidt(A, product=None, atol=1e-13, rtol=1e-13, offset=0, find_duplica
                     if j in remove:
                         continue
                     if product is None:
-                        p = A.pairwise_dot(A, ind=i, o_ind=j)[0]
+			#import pdb; pdb.set_trace()
+                        p = A.pairwise_dot(A, ind=j, o_ind=i, conjugate = True)[0]
                     else:
-                        p = product.pairwise_apply2(A, A, V_ind=i, U_ind=j)[0]
+                        p = product.pairwise_apply2(A, A, V_ind=j, U_ind=i, conjugate = True)[0]
                     A.axpy(-p, A, ind=i, x_ind=j)
 
                 # calculate new norm
                 if product is None:
                     old_norm, norm = norm, A.l2_norm(ind=i)[0]
                 else:
-                    old_norm, norm = norm, np.sqrt(product.pairwise_apply2(A, A, V_ind=i, U_ind=i))[0]
+                    old_norm, norm = norm, induced_norm(product)(A, ind=i)[0]
 
                 # remove vector if it got too small:
                 if norm / initial_norm < rtol:
@@ -112,12 +114,12 @@ def gram_schmidt(A, product=None, atol=1e-13, rtol=1e-13, offset=0, find_duplica
 
     if remove:
         A.remove(remove)
-
+    #import pdb; pdb.set_trace()
     if check:
         if product:
-            error_matrix = product.apply2(A, A, V_ind=range(offset, len(A)))
+            error_matrix = product.apply2(A, A, V_ind=range(offset, len(A)), conjugate = True)
         else:
-            error_matrix = A.dot(A, ind=range(offset, len(A)))
+            error_matrix = A.dot(A, ind=range(offset, len(A)), conjugate = True)
         error_matrix[:len(A) - offset, offset:len(A)] -= np.eye(len(A) - offset)
         if error_matrix.size > 0:
             err = np.max(np.abs(error_matrix))

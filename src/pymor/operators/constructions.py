@@ -20,14 +20,11 @@ from pymor.operators.interfaces import OperatorInterface
 from pymor.parameters.base import Parametric
 from pymor.parameters.interfaces import ParameterFunctionalInterface
 from pymor.vectorarrays.interfaces import VectorArrayInterface, VectorSpace
-from pymor.vectorarrays.numpy import NumpyVectorArray, NumpyVectorSpace
+from pymor.vectorarrays.numpy import NumpyVectorArray, NumpyVectorSpace, _complex_dtypes
 
 
 class LincombOperator(OperatorBase):
-    """Linear combination of arbitrary |Operators|.
-
-    This |Operator| represents a (possibly |Parameter| dependent)
-    linear combination of a given list of |Operators|.
+    """An operator representing a linear combination of arbitrary |Operators|.
 
     Parameters
     ----------
@@ -41,6 +38,7 @@ class LincombOperator(OperatorBase):
     """
 
     def __init__(self, operators, coefficients, solver_options=None, name=None):
+        operators, coefficients = zip(*[(o, c) for o, c in zip(operators,coefficients) if o is not None])
         assert len(operators) > 0
         assert len(operators) == len(coefficients)
         assert all(isinstance(op, OperatorInterface) for op in operators)
@@ -59,7 +57,7 @@ class LincombOperator(OperatorBase):
         self._try_assemble = not self.parametric
 
     def evaluate_coefficients(self, mu):
-        """Compute the linear coefficients for a given |Parameter|.
+        """Compute the linear coefficients of the linear combination for a given parameter.
 
         Parameters
         ----------
@@ -88,34 +86,34 @@ class LincombOperator(OperatorBase):
             R.axpy(c, op.apply(U, ind=ind, mu=mu))
         return R
 
-    def apply2(self, V, U, U_ind=None, V_ind=None, mu=None, product=None):
+    def apply2(self, V, U, U_ind=None, V_ind=None, mu=None, product=None, conjugate=None):
         if hasattr(self, '_assembled_operator'):
             if self._defaults_sid == defaults_sid():
-                return self._assembled_operator.apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product)
+                return self._assembled_operator.apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product, conjugate=conjugate)
             else:
-                return self.assemble().apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product)
+                return self.assemble().apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product, conjugate=conjugate)
         elif self._try_assemble:
-            return self.assemble().apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product)
+            return self.assemble().apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product, conjugate=conjugate)
         coeffs = self.evaluate_coefficients(mu)
-        R = self.operators[0].apply2(V, U, V_ind=V_ind, U_ind=U_ind, mu=mu, product=product)
+        R = self.operators[0].apply2(V, U, V_ind=V_ind, U_ind=U_ind, mu=mu, product=product, conjugate=conjugate)
         R *= coeffs[0]
         for op, c in izip(self.operators[1:], coeffs[1:]):
-            R += c * op.apply2(V, U, V_ind=V_ind, U_ind=U_ind, mu=mu, product=product)
+            R += c * op.apply2(V, U, V_ind=V_ind, U_ind=U_ind, mu=mu, product=product, conjugate=conjugate)
         return R
 
-    def pairwise_apply2(self, V, U, U_ind=None, V_ind=None, mu=None, product=None):
+    def pairwise_apply2(self, V, U, U_ind=None, V_ind=None, mu=None, product=None, conjugate=None):
         if hasattr(self, '_assembled_operator'):
             if self._defaults_sid == defaults_sid():
-                return self._assembled_operator.pairwise_apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product)
+                return self._assembled_operator.pairwise_apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product, conjugate=conjugate)
             else:
-                return self.assemble().pairwise_apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product)
+                return self.assemble().pairwise_apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product, conjugate=conjugate)
         elif self._try_assemble:
-            return self.assemble().pairwise_apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product)
+            return self.assemble().pairwise_apply2(V, U, V_ind=V_ind, U_ind=U_ind, product=product, conjugate=conjugate)
         coeffs = self.evaluate_coefficients(mu)
-        R = self.operators[0].pairwise_apply2(V, U, V_ind=V_ind, U_ind=U_ind, mu=mu, product=product)
+        R = self.operators[0].pairwise_apply2(V, U, V_ind=V_ind, U_ind=U_ind, mu=mu, product=product, conjugate=conjugate)
         R *= coeffs[0]
         for op, c in izip(self.operators[1:], coeffs[1:]):
-            R += c * op.pairwise_apply2(V, U, V_ind=V_ind, U_ind=U_ind, mu=mu, product=product)
+            R += c * op.pairwise_apply2(V, U, V_ind=V_ind, U_ind=U_ind, mu=mu, product=product, conjugate=conjugate)
         return R
 
     def apply_adjoint(self, U, ind=None, mu=None, source_product=None, range_product=None):
@@ -212,7 +210,7 @@ class LincombOperator(OperatorBase):
         return self.with_(operators=proj_operators, name=name or self.name + '_projected')
 
     def projected_to_subbasis(self, dim_range=None, dim_source=None, name=None):
-        """See :meth:`pymor.operators.numpy.NumpyMatrixOperator.projected_to_subbasis`."""
+        """See :meth:`NumpyMatrixOperator.projected_to_subbasis`."""
         assert dim_source is None or dim_source <= self.source.dim
         assert dim_range is None or dim_range <= self.range.dim
         proj_operators = [op.projected_to_subbasis(dim_range=dim_range, dim_source=dim_source)
@@ -290,14 +288,13 @@ class Concatenation(OperatorBase):
 
 
 class ComponentProjection(OperatorBase):
-    """|Operator| representing the projection of a |VectorArray| on some of its components.
+    """|Operator| representing the projection of a Vector on some of its components.
 
     Parameters
     ----------
     components
-        List or 1D |NumPy array| of the indices of the vector
-        :meth:`~pymor.vectorarrays.interfaces.VectorArrayInterface.components` that ar
-        to be extracted by the operator.
+        List or 1D |NumPy array| of the indices of the vector components that are to
+        be extracted by the operator.
     source
         Source |VectorSpace| of the operator.
     name
@@ -326,7 +323,7 @@ class ComponentProjection(OperatorBase):
 class IdentityOperator(OperatorBase):
     """The identity |Operator|.
 
-    In other words::
+    In other word ::
 
         op.apply(U) == U
 
@@ -380,8 +377,6 @@ class IdentityOperator(OperatorBase):
 
     def assemble_lincomb(self, operators, coefficients, solver_options=None, name=None):
         if all(isinstance(op, IdentityOperator) for op in operators):
-            if len(operators) == 1:  # avoid infinite recursion
-                return None
             assert all(op.source == operators[0].source for op in operators)
             return IdentityOperator(operators[0].source, name=name) * sum(coefficients)
         else:
@@ -521,7 +516,7 @@ class ZeroOperator(OperatorBase):
             return operators[1].assemble_lincomb(operators[1:], coefficients[1:], solver_options=solver_options,
                                                  name=name)
         else:
-            return None
+            return self
 
     def restricted(self, dofs):
         assert all(0 <= c < self.range.dim for c in dofs)
@@ -531,12 +526,12 @@ class ZeroOperator(OperatorBase):
 class VectorArrayOperator(OperatorBase):
     """Wraps a |VectorArray| as an |Operator|.
 
-    If `transposed` is `False`, the operator maps from `NumpyVectorSpace(len(array))`
+    If `transposed == False`, the operator maps from `NumpyVectorSpace(len(array))`
     to `array.space` by forming linear combinations of the vectors in the array
     with given coefficient arrays.
 
     If `transposed == True`, the operator maps from `array.space` to
-    `NumpyVectorSpace(len(array))` by forming the inner products of the argument
+    `NumpyVectorSpace(len(array))` by forming the scalar products of the arument
     with the vectors in the given array.
 
     Parameters
@@ -569,7 +564,7 @@ class VectorArrayOperator(OperatorBase):
                 U = U.copy(ind)
             return self._array.lincomb(U.data)
         else:
-            return NumpyVectorArray(U.dot(self._array, ind=ind), copy=False)
+            return NumpyVectorArray(U.dot(self._array, ind=ind, conjugate=True), copy=False)
 
     def apply_adjoint(self, U, ind=None, mu=None, source_product=None, range_product=None):
         assert U in self.range
@@ -644,7 +639,7 @@ class VectorOperator(VectorArrayOperator):
         op: R^1 ----> R^d
              x  |---> x⋅v
 
-    In particular::
+    In particular ::
 
         VectorOperator(vector).as_vector() == vector
 
@@ -674,7 +669,7 @@ class VectorFunctional(VectorArrayOperator):
         f: R^d ----> R^1
             u  |---> (u, v)
 
-    where `( , )` denotes the inner product given by `product`.
+    where `( , )` denotes the scalar product given by `product`.
 
     In particular, if `product` is `None` ::
 
@@ -708,7 +703,7 @@ class VectorFunctional(VectorArrayOperator):
 
 
 class FixedParameterOperator(OperatorBase):
-    """Makes an |Operator| |Parameter|-independent by setting a fixed |Parameter|.
+    """Makes an |Operator| |Parameter|-independent by providing it a fixed |Parameter|.
 
     Parameters
     ----------
@@ -755,7 +750,7 @@ class FixedParameterOperator(OperatorBase):
 
 
 class AdjointOperator(OperatorBase):
-    """Represents the adjoint of a given linear |Operator|.
+    """Represents the adjoint of a given |Operator|.
 
     See :meth:`~pymor.operators.interfaces.OperatorInterface.apply_adjoint`.
 
@@ -764,19 +759,19 @@ class AdjointOperator(OperatorBase):
     operator
         The |Operator| of which the adjoint is formed.
     source_product
-        If not `None`, inner product |Operator| for the source |VectorSpace|
+        If not `None`, scalar product |Operator| for the source |VectorSpace|
         w.r.t. which to take the adjoint.
     range_product
-        If not `None`, inner product |Operator| for the range |VectorSpace|
+        If not `None`, scalar product |Operator| for the range |VectorSpace|
         w.r.t. which to take the adjoint.
     name
         If not `None`, name of the operator.
     with_apply_inverse
         If `True`, provide own :meth:`~pymor.operators.interfaces.OperatorInterface.apply_inverse`
-        and :meth:`~pymor.operators.interfaces.OperatorInterface.apply_inverse_adjoint`
+        and :meth:`~pymor.operator.interfaces.OperatorInterface.apply_inverse_adjoint`
         implementations by calling these methods on the given `operator`.
         (Is set to `False` in the default implementation of
-        and :meth:`~pymor.operators.interfaces.OperatorInterface.apply_inverse_adjoint`.)
+        and :meth:`~pymor.operator.interfaces.OperatorInterface.apply_inverse_adjoint`.)
     solver_options
         When `with_apply_inverse` is `False`, the |solver_options| to use for
         the `apply_inverse` default implementation.
@@ -873,10 +868,11 @@ class AdjointOperator(OperatorBase):
 
 
 class SelectionOperator(OperatorBase):
-    """An |Operator| selected from a list of |Operators|.
+    """An |Operator| selecting one out of a list of |Operators|.
 
-    `operators[i]` is used if `parameter_functional(mu)` is less or
-    equal than `boundaries[i]` and greater than `boundaries[i-1]`::
+    operators[i] is used
+    if parameterfunctional(mu) is less or equal than boundaries[i]
+    and greater than boundaries[i-1]::
 
         -infty ------- boundaries[i] ---------- boundaries[i+1] ------- infty
                             |                        |
@@ -887,9 +883,9 @@ class SelectionOperator(OperatorBase):
     ----------
     operators
         List of |Operators| from which one |Operator| is
-        selected based on the given |Parameter|.
+        selected based on a parameter.
     parameter_functional
-        The |ParameterFunctional| used for the selection of one |Operator|.
+        A |ParameterFunctional| used for the selection of one |Operator|.
     boundaries
         The interval boundaries as defined above.
     name
@@ -952,26 +948,25 @@ class SelectionOperator(OperatorBase):
 
 @defaults('raise_negative', 'tol')
 def induced_norm(product, raise_negative=True, tol=1e-10, name=None):
-    """Obtain induced norm of an inner product.
+    """The induced norm of a scalar product.
 
-    The norm of the vectors in a |VectorArray| U is calculated by
+    The norm of a the vectors in a |VectorArray| U is calculated by
     calling ::
 
-        product.pairwise_apply2(U, U, mu=mu).
+        product.pairwise_apply2(U, U, mu=mu)
 
     In addition, negative norm squares of absolute value smaller
     than `tol` are clipped to `0`.
     If `raise_negative` is `True`, a :exc:`ValueError` exception
-    is raised if there are negative norm squares of absolute value
-    larger than `tol`.
+    is raised if there are still negative norm squares afterwards.
 
     Parameters
     ----------
     product
-        The inner product |Operator| for which the norm is to be
+        The scalar product |Operator| for which the norm is to be
         calculated.
     raise_negative
-        If `True`, raise an exception if calculated norm is negative.
+        If `True`, raise an exception if calcuated norm is negative.
     tol
         See above.
 
@@ -996,7 +991,16 @@ class InducedNorm(ImmutableInterface, Parametric):
         self.build_parameter_type(inherits=(product,))
 
     def __call__(self, U, ind=None, mu=None):
-        norm_squared = self.product.pairwise_apply2(U, U, U_ind=ind, V_ind=ind, mu=mu)
+        if U.data.dtype in _complex_dtypes:
+            norm_squared = self.product.pairwise_apply2(U, U, U_ind=ind, V_ind=ind, mu=mu, conjugate=True)
+	    #np.seterr(all='raise')
+            if (np.linalg.norm(norm_squared.imag) > 1e-11):
+                raise ValueError('norm is complex (square = {})'.format(norm_squared))
+                
+            norm_squared = norm_squared.real
+        else:
+            norm_squared = self.product.pairwise_apply2(U, U, U_ind=ind, V_ind=ind, mu=mu, conjugate=True)
+        
         if self.tol > 0:
             norm_squared = np.where(np.logical_and(0 > norm_squared, norm_squared > - self.tol),
                                     0, norm_squared)
