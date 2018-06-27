@@ -24,10 +24,7 @@ from localize_problem import *
 from constants import *
 from generate_solution import *
 
-resolution = 200
-coarse_grid_resolution = 10
-
-def evaluation(it, lim, k, boundary, save, c= None, plot = False):
+def evaluation(it, lim, k, boundary, save, c= None, plot = False, resolution = 200, coarse_grid_resolution = 10):
 	import time
 	p = helmholtz(boundary = boundary)
 	if c is None:
@@ -75,7 +72,7 @@ def evaluation(it, lim, k, boundary, save, c= None, plot = False):
 		plt.xlabel('Basis size')
 		plt.show()
 
-def ungleichung(it, lim, k, boundary, save, plot=False):
+def ungleichung(it, lim, k, boundary, save, plot=False, resolution = 200, coarse_grid_resolution = 10):
 	import time
 	p = helmholtz(boundary = boundary)
 	mus = (k, -1j*k, -1j*k)
@@ -126,7 +123,7 @@ def ungleichung(it, lim, k, boundary, save, plot=False):
 		plt.xlabel('Basis size')
 		plt.show()
 
-def accuracy(it, num_testvecs, k, boundary, save, plot = False):
+def accuracy(it, num_testvecs, k, boundary, save, plot = False, resolution = 200, coarse_grid_resolution = 10):
 	#tol/err
 	p = helmholtz(boundary = boundary)
 	mus = (k, -1j*k, -1j*k)
@@ -163,7 +160,7 @@ def accuracy(it, num_testvecs, k, boundary, save, plot = False):
 		plt.gca().invert_xaxis()
 		plt.show()
 
-def test(transfer = 'robin',boundary = 'dirichlet', n=15,k=6., c=6., title = 'test'):
+def test(transfer = 'robin',boundary = 'dirichlet', n=15,k=6., c=6., title = 'test', resolution = 200, coarse_grid_resolution = 10):
 	mus = (k, -1j*k, -1j*c)
 	mu_glob = {'c': mus[1], 'k': mus[0]}
 	p = helmholtz(boundary = boundary)
@@ -175,7 +172,7 @@ def test(transfer = 'robin',boundary = 'dirichlet', n=15,k=6., c=6., title = 'te
 	dif = u-ru
 	d.visualize((dif.real, dif.imag, u.real, u.imag, ru.real, ru.imag), legend = ('dif.real', 'dif.imag', 'u.real', 'u.imag', 'ru.real', 'ru.imag'), separate_colorbars = True, title = title)
 
-def kerr(it, n, boundary, save, c= None, rang = np.arange(0.2,50.,.2), plot = False):
+def kerr(it, n, boundary, save, c= None, rang = np.arange(0.2,50.,.2), plot = False, resolution = 200, coarse_grid_resolution = 10):
 	#k/err
 	err_d =[]
 	err_r = []
@@ -220,7 +217,7 @@ def kerr(it, n, boundary, save, c= None, rang = np.arange(0.2,50.,.2), plot = Fa
 		plt.legend(loc='upper right')
 		plt.show()
 
-def cerr(it, n, comp, k, c, boundary, save, rang = np.arange(-10.,10.,.1),plot = False):
+def cerr(it, n, comp, k, c, boundary, save, rang = np.arange(-10.,10.,.1),plot = False, resolution = 200, coarse_grid_resolution = 10):
 	#c/err
 	err_r = []
 	if comp == True:
@@ -258,7 +255,7 @@ def cerr(it, n, comp, k, c, boundary, save, rang = np.arange(-10.,10.,.1),plot =
 		plt.legend(loc='upper right')
 		plt.show()
 
-def cerr2D(it, n, k, boundary, save, rang = np.arange(-10.,10.,.5), plot = False, cglob = None):
+def cerr2D(it, n, k, boundary, save, rang = np.arange(-10.,10.,.5), plot = False, cglob = None, resolution = 200, coarse_grid_resolution = 10):
 	#c/err
 	err_r = np.zeros((len(rang),len(rang)))
 	p = helmholtz(boundary = boundary)
@@ -284,8 +281,8 @@ def cerr2D(it, n, k, boundary, save, rang = np.arange(-10.,10.,.5), plot = False
 				ru_r = reconstruct_solution(gq, lq, bases)
 				del bases
 				dif_r = u-ru_r
-				e_r.append(d.h1_norm(dif_r)[0]/d.h1_norm(u)[0])
-			err_r[xi][yi]=np.mean(e_r)
+				e_r.append(np.minimum(1.,d.h1_norm(dif_r)[0]/d.h1_norm(u)[0]))
+			err_r[xi][yi]=np.median(e_r)
 			yi+=1
 		xi+=1
 	X,Y = np.meshgrid(rang, rang)
@@ -301,7 +298,7 @@ def cerr2D(it, n, k, boundary, save, rang = np.arange(-10.,10.,.5), plot = False
 		fig.colorbar(surf, shrink =0.5, aspect=5)
 		plt.show()
 
-def cerr2Dp(it, n, k, boundary, save, rang = np.arange(-10.,10.,.5), plot = False):
+def cerr2Dp(it, n, k, boundary, save, rang = np.arange(-10.,10.,.5), plot = False, resolution = 200, coarse_grid_resolution = 10):
 	import multiprocessing
 	#c/err
 	err_r = np.zeros((len(rang),len(rang)))
