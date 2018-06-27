@@ -85,7 +85,7 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 	full_h1_product = d.products["h1"].assemble()
 	for xpos in range(coarse_grid_resolution-1):
 		for ypos in range(coarse_grid_resolution-1):
-			print "localizing..."
+			#print "localizing..."
 			s_id = subspaces_per_codim[2][ypos + xpos*(coarse_grid_resolution-1)]
 			space = subspaces[s_id]["env"]
 			ldict = {}
