@@ -231,8 +231,8 @@ def cerr2D(it, n, k, boundary, save, cglob = 0, rang = np.arange(-10.,10.,.5), p
 				ru_r = reconstruct_solution(gq, lq, bases)
 				del bases
 				dif_r = u-ru_r
-				e_r.append(np.minimum(1.,d.h1_norm(dif_r)[0]/d.h1_norm(u)[0]))
-			err_r[xi][yi]=np.median(e_r)
+				e_r.append(d.h1_norm(dif_r)[0]/d.h1_norm(u)[0])
+			err_r[xi][yi]=np.mean(e_r)
 			yi+=1
 		xi+=1
 	X,Y = np.meshgrid(rang, rang)
