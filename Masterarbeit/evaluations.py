@@ -24,16 +24,13 @@ from localize_problem import *
 from constants import *
 from generate_solution import *
 
-def evaluation(it, lim, k, boundary, save, c= None, plot = False, resolution = 200, coarse_grid_resolution = 10):
+def evaluation(it, lim, k, boundary, save, cglob = 0, cloc = 0, plot = False, resolution = 200, coarse_grid_resolution = 10):
 	import time
 	p = helmholtz(boundary = boundary)
-	if c is None:
-		c=-1j*k
-	mus = (k, -1j*k, c)
-	mu_glob = {'c': mus[1], 'k': mus[0]}
+	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus)
 	d = gq["d"]
-	u = d.solve(mu_glob)
+	u = d.solve(mus)
 	h1_dirichlet = []
 	h1_robin = []
 	for i in range(lim):
@@ -72,14 +69,13 @@ def evaluation(it, lim, k, boundary, save, c= None, plot = False, resolution = 2
 		plt.xlabel('Basis size')
 		plt.show()
 
-def ungleichung(it, lim, k, boundary, save, plot=False, resolution = 200, coarse_grid_resolution = 10):
+def ungleichung(it, lim, k, boundary, save, cglob = 0, cloc = 0, plot=False, resolution = 200, coarse_grid_resolution = 10):
 	import time
 	p = helmholtz(boundary = boundary)
-	mus = (k, -1j*k, -1j*k)
-	mu_glob = {'c': mus[1], 'k': mus[0]}
+	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calT = True, calQ = True)
 	d = gq["d"]
-	u = d.solve(mu_glob)	
+	u = d.solve(mus)	
 	LS = []
 	RS = []
 	RS2 = []
@@ -123,15 +119,14 @@ def ungleichung(it, lim, k, boundary, save, plot=False, resolution = 200, coarse
 		plt.xlabel('Basis size')
 		plt.show()
 
-def accuracy(it, num_testvecs, k, boundary, save, plot = False, resolution = 200, coarse_grid_resolution = 10):
+def accuracy(it, num_testvecs, k, boundary, save, cglob = 0, cloc = 0, plot = False, resolution = 200, coarse_grid_resolution = 10):
 	#tol/err
 	p = helmholtz(boundary = boundary)
-	mus = (k, -1j*k, -1j*k)
-	mu_glob = {'c': mus[1], 'k': mus[0]}
+	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calQ = True)
 	logspace = np.logspace(5, -10, num = 20)
 	d = gq["d"]
-	u = d.solve(mu_glob)
+	u = d.solve(mus)
 	ERR = []
 	calculate_lambda_min(gq, lq)
 	for target_accuracy in logspace:
@@ -160,34 +155,32 @@ def accuracy(it, num_testvecs, k, boundary, save, plot = False, resolution = 200
 		plt.gca().invert_xaxis()
 		plt.show()
 
-def test(transfer = 'robin',boundary = 'dirichlet', n=15,k=6., c=6., title = 'test', resolution = 200, coarse_grid_resolution = 10):
-	mus = (k, -1j*k, -1j*c)
-	mu_glob = {'c': mus[1], 'k': mus[0]}
+def test(transfer = 'robin',boundary = 'dirichlet', n=15,k=6.,cglob= 6, cloc=6., title = 'test', resolution = 200, coarse_grid_resolution = 10):
+	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 	p = helmholtz(boundary = boundary)
 	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
 	basis = create_bases2(gq,lq,n,transfer = transfer)
 	ru = reconstruct_solution(gq,lq,basis)
 	d = gq["d"]
-	u = d.solve(mu_glob)
+	u = d.solve(mus)
 	dif = u-ru
 	d.visualize((dif.real, dif.imag, u.real, u.imag, ru.real, ru.imag), legend = ('dif.real', 'dif.imag', 'u.real', 'u.imag', 'ru.real', 'ru.imag'), separate_colorbars = True, title = title)
 
-def kerr(it, n, boundary, save, c= None, rang = np.arange(0.2,50.,.2), plot = False, resolution = 200, coarse_grid_resolution = 10):
+def kerr(it, n, boundary, save, cglob = None, cloc = None, rang = np.arange(0.2,50.,.2), plot = False, resolution = 200, coarse_grid_resolution = 10):
 	#k/err
 	err_d =[]
 	err_r = []
 	p = helmholtz(boundary = boundary)
-	usec = not(c is None)
 	for k in rang:
 		print k
-		if usec:
-			mus = (k, -1j*k, c)
-		else:
-			mus = (k, -1j*k, -1j*k)
-		mu_glob = {'c': mus[1], 'k': mus[0]}
+		if cloc is None:
+			cloc = -1j*k
+		if cglob is None:
+			cglob = -1j*k
+		mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus)
 		d = gq["d"]
-		u = d.solve(mu_glob)
+		u = d.solve(mus)
 		e_d = []
 		e_r = []
 		for i in range(it):
@@ -217,63 +210,20 @@ def kerr(it, n, boundary, save, c= None, rang = np.arange(0.2,50.,.2), plot = Fa
 		plt.legend(loc='upper right')
 		plt.show()
 
-def cerr(it, n, comp, k, c, boundary, save, rang = np.arange(-10.,10.,.1),plot = False, resolution = 200, coarse_grid_resolution = 10):
-	#c/err
-	err_r = []
-	if comp == True:
-		im = 1j
-	else:
-		im = 1
-	p = helmholtz(boundary = boundary)
-	for c_loc in rang:
-		print c_loc
-		mus = (k,-1j*c,-1*im*c_loc)
-		mu_glob = {'c': mus[1], 'k': mus[0]}
-		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus)
-		d = gq["d"]
-		u = d.solve(mu_glob)
-		e_r = []
-		for i in range(it):
-			print c_loc, i
-			bases = create_bases2(gq,lq,n,transfer = 'robin')
-			ru_r = reconstruct_solution(gq, lq, bases)
-			del bases
-			dif_r = u-ru_r
-			e_r.append(d.h1_norm(dif_r)[0]/d.h1_norm(u)[0])
-		err_r.append(e_r)
-	means_r = np.mean(err_r, axis = 1)
-	#data_r = np.vstack([rang, means_r]).T
-	limits = [0, 25, 50, 75, 100]
-	percentiles_r = np.array(np.percentile(err_r, limits, axis=1))
-	data = np.vstack([rang, means_r, percentiles_r]).T
-	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])	
-	if plot:	
-		from matplotlib import pyplot as plt
-		plt.figure()
-		plt.plot(rang, means_r, label = "robin")
-		plt.xlabel('c')
-		plt.legend(loc='upper right')
-		plt.show()
-
-def cerr2D(it, n, k, boundary, save, rang = np.arange(-10.,10.,.5), plot = False, cglob = None, resolution = 200, coarse_grid_resolution = 10):
+def cerr2D(it, n, k, boundary, save, cglob = 0, rang = np.arange(-10.,10.,.5), plot = False, resolution = 200, coarse_grid_resolution = 10):
 	#c/err
 	err_r = np.zeros((len(rang),len(rang)))
 	p = helmholtz(boundary = boundary)
-	usec = not(cglob is None)
 	xi = 0
 	for x in rang:
 		yi = 0
 		for y in rang:
 			c = x+1j*y
 			print c
-			if usec: 
-				mus = (k,cglob, c)
-			else:
-				mus = (k,-1j*k,c)
-			mu_glob = {'c': mus[1], 'k': mus[0]}
+			mus = {'k': k, 'c_glob': cglob, 'c_loc': c}
 			gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus)
 			d = gq["d"]
-			u = d.solve(mu_glob)
+			u = d.solve(mus)
 			e_r = []
 			for i in range(it):
 				print c, i
@@ -296,42 +246,4 @@ def cerr2D(it, n, k, boundary, save, rang = np.arange(-10.,10.,.5), plot = False
 		ax = fig.gca(projection='3d')
 		surf = ax.plot_surface(X,Y,err_r,  cstride = 1, rstride =1, cmap = cm.coolwarm, linewidth=0, antialiased=False)
 		fig.colorbar(surf, shrink =0.5, aspect=5)
-		plt.show()
-
-def cerr2Dp(it, n, k, boundary, save, rang = np.arange(-10.,10.,.5), plot = False, resolution = 200, coarse_grid_resolution = 10):
-	import multiprocessing
-	#c/err
-	err_r = np.zeros((len(rang),len(rang)))
-	prob = helmholtz(boundary = boundary)
-	progress = 0
-	def doit():
-		bases = create_bases2(gq,lq,n,transfer = 'robin')
-		ru_r = reconstruct_solution(gq, lq, bases)
-		del bases
-		dif_r = u-ru_r
-		e_r.append(d.h1_norm(dif_r)[0]/d.h1_norm(u)[0])
-	jobs = []
-	xi = 0
-	for x in rang:
-		yi = 0
-		for y in rang:
-			c = x+1j*y
-			print c
-			mus = (k,-1j*k,c)
-			mu_glob = {'c': mus[1], 'k': mus[0]}
-			gq, lq = localize_problem(prob, coarse_grid_resolution, resolution, mus = mus)
-			d = gq["d"]
-			u = d.solve(mu_glob)
-			e_r = []
-			for i in range(it):
-				print c, i
-				p = multiprocessing.Process(target = doit)
-				jobs.append(p)
-				p.start()
-			err_r[xi][yi]=np.mean(e_r)
-			yi+=1
-		xi+=1
-	X,Y = np.meshgrid(rang, rang)
-	data = np.vstack([Y.reshape(len(rang)**2,),X.reshape(len(rang)**2,),err_r.reshape(len(rang)**2,)]).T
-	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
-	
+		plt.show()	

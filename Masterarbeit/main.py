@@ -32,7 +32,7 @@ if not os.path.exists("dats"):
 
 
 # kerr(it = 10, n = 15, boundary = 'robin', save = "dats/k_err_bsp1_200.dat")
-kerr(it = 10, n = 15, boundary = 'dirichlet', save = "dats/k_err_bsp2_200.dat")
+#kerr(it = 10, n = 15, boundary = 'dirichlet', save = "dats/k_err_bsp2_200.dat")
 # kerr2(it = 10, n = 15, boundary = 'dirichlet', save = "dats/k_err_bsp2_c2.dat")
 
 # kerr(it = 10, n = 15, c=2,boundary = 'neumann', save = "dats/k_err_bsp3.dat")

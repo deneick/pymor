@@ -62,7 +62,7 @@ def helmholtz(boundary = 'robin', g=0., f=True):
 		rhs=ConstantFunction(0., dim_domain=domain.dim)
 
 	parameter_range=(0., 100.)
-	parameter_space = CubicParameterSpace({'c': (), 'k': ()}, *parameter_range)
+	parameter_space = CubicParameterSpace({'k': (), 'c_glob': (), 'c_loc': ()}, *parameter_range)
 	p = EllipticProblem(
 		    diffusion_functions=[ConstantFunction(1., dim_domain=domain.dim)],
 		    diffusion_functionals=[1.],
@@ -71,7 +71,8 @@ def helmholtz(boundary = 'robin', g=0., f=True):
 		    domain=domain,
 		    rhs = rhs,
 		    parameter_space=parameter_space,
-		    robin_data = (ExpressionFunction('mu["c"]+x[...,0]*0*mu["k"]', 2, (), parameter_type={'c': (), 'k': ()}), ConstantFunction(g, dim_domain=2)),
+		    #robin_data = (ExpressionFunction('mu["c"]+x[...,0]*0*mu["k"]', 2, (), parameter_type={'c': (), 'k': ()}), ConstantFunction(g, dim_domain=2)),
+		    robin_data = (ExpressionFunction('0*mu["k"]+mu["c_glob"]*((x[...,1]==0)+(x[...,1]==1))*((x[...,0]==0)+(x[...,0]==1))+mu["c_loc"]*(x[...,1]>0)*(x[...,1]<1)*(x[...,0]>0)*(x[...,0]<1)', 2, (), parameter_type={'k': (), 'c_glob': (), 'c_loc': ()}), ConstantFunction(g, dim_domain=2)),
 		    neumann_data = ConstantFunction(0, dim_domain = 2)
 	)
 	return p
