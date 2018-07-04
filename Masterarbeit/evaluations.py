@@ -210,7 +210,7 @@ def kerr(it, n, boundary, save, cglob = None, cloc = None, rang = np.arange(0.2,
 		plt.legend(loc='upper right')
 		plt.show()
 
-def cerr2D(it, n, k, boundary, save, cglob = 0, rang = np.arange(-10.,10.,.5), plot = False, resolution = 200, coarse_grid_resolution = 10):
+def cerr2D(it, n, k, boundary, save, cglob = 0, rang = np.arange(-10.,10.,1.), plot = False, resolution = 200, coarse_grid_resolution = 10):
 	#c/err
 	err_r = np.zeros((len(rang),len(rang)))
 	p = helmholtz(boundary = boundary)
