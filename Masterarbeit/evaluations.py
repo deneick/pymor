@@ -164,19 +164,19 @@ def test(transfer = 'robin',boundary = 'dirichlet', n=15,k=6.,cglob= 6, cloc=6.,
 	d = gq["d"]
 	u = d.solve(mus)
 	dif = u-ru
+	print d.h1_norm(dif)[0]/d.h1_norm(u)[0]
 	d.visualize((dif.real, dif.imag, u.real, u.imag, ru.real, ru.imag), legend = ('dif.real', 'dif.imag', 'u.real', 'u.imag', 'ru.real', 'ru.imag'), separate_colorbars = True, title = title)
 
-def kerr(it, n, boundary, save, cglob = None, cloc = None, rang = np.arange(0.2,50.,.2), plot = False, resolution = 200, coarse_grid_resolution = 10):
+def kerr(it, n, boundary, save, cglob = None, cloc = 0, rang = np.arange(0.2,50.,.2), plot = False, resolution = 200, coarse_grid_resolution = 10):
 	#k/err
 	err_d =[]
 	err_r = []
 	p = helmholtz(boundary = boundary)
+	usecglob = not (cglob is None)
 	for k in rang:
 		print k
-		if cloc is None:
-			cloc = -1j*k
-		if cglob is None:
-			cglob = -1j*k
+		if usecglob:
+			cglob = -1j*k 			######wichtig!!
 		mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus)
 		d = gq["d"]
@@ -210,7 +210,7 @@ def kerr(it, n, boundary, save, cglob = None, cloc = None, rang = np.arange(0.2,
 		plt.legend(loc='upper right')
 		plt.show()
 
-def cerr2D(it, n, k, boundary, save, cglob = 0, rang = np.arange(-10.,10.,.5), plot = False, resolution = 200, coarse_grid_resolution = 10):
+def cerr2D(it, n, k, boundary, save, cglob = 0, rang = np.arange(-10.,10.,1.), plot = False, resolution = 200, coarse_grid_resolution = 10):
 	#c/err
 	err_r = np.zeros((len(rang),len(rang)))
 	p = helmholtz(boundary = boundary)
@@ -236,7 +236,7 @@ def cerr2D(it, n, k, boundary, save, cglob = 0, rang = np.arange(-10.,10.,.5), p
 			yi+=1
 		xi+=1
 	X,Y = np.meshgrid(rang, rang)
-	data = np.vstack([Y.reshape(len(rang)**2,),X.reshape(len(rang)**2,),err_r.reshape(len(rang)**2,)]).T
+	data = np.vstack([X.T.ravel(),Y.T.ravel(),err_r.ravel()]).T
 	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
 	if plot:
 		from mpl_toolkits.mplot3d import Axes3D
@@ -246,4 +246,42 @@ def cerr2D(it, n, k, boundary, save, cglob = 0, rang = np.arange(-10.,10.,.5), p
 		ax = fig.gca(projection='3d')
 		surf = ax.plot_surface(X,Y,err_r,  cstride = 1, rstride =1, cmap = cm.coolwarm, linewidth=0, antialiased=False)
 		fig.colorbar(surf, shrink =0.5, aspect=5)
-		plt.show()	
+		plt.show()
+
+def knerr2D(it, lim ,boundary, save, cglob = None, cloc = 0, krang = np.arange(0.,200.,10.), plot = False, resolution = 100, coarse_grid_resolution = 10):
+	#c/err
+	err_r = np.zeros((len(krang),lim))
+	p = helmholtz(boundary = boundary)
+	xi = 0
+	for k in krang:
+		yi = 0
+		if cglob is None:
+			cglob = -1j*k
+		mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus)
+		d = gq["d"]
+		u = d.solve(mus)
+		for n in range(lim):
+			e_r = []
+			for i in range(it):
+				print k, n
+				bases = create_bases2(gq,lq,n,transfer = 'robin')
+				ru_r = reconstruct_solution(gq, lq, bases)
+				del bases
+				dif_r = u-ru_r
+				e_r.append(d.h1_norm(dif_r)[0]/d.h1_norm(u)[0])
+			err_r[xi][yi]=np.mean(e_r)
+			yi+=1
+		xi+=1
+	X,Y = np.meshgrid(krang, range(lim))
+	data = np.vstack([X.T.ravel(),Y.T.ravel(),err_r.ravel()]).T
+	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
+	if plot:
+		from mpl_toolkits.mplot3d import Axes3D
+		import matplotlib.pyplot as plt
+		from matplotlib import cm
+		fig = plt.figure()
+		ax = fig.gca(projection='3d')
+		surf = ax.plot_surface(X,Y,err_r,  cstride = 1, rstride =1, cmap = cm.coolwarm, linewidth=0, antialiased=False)
+		fig.colorbar(surf, shrink =0.5, aspect=5)
+		plt.show()
