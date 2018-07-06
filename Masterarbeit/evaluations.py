@@ -248,9 +248,9 @@ def cerr2D(it, n, k, boundary, save, cglob = 0, rang = np.arange(-10.,10.,1.), p
 		fig.colorbar(surf, shrink =0.5, aspect=5)
 		plt.show()
 
-def knerr2D(it, lim ,boundary, save, cglob = None, cloc = 0, krang = np.arange(0.,200.,10.), plot = False, resolution = 100, coarse_grid_resolution = 10):
+def knerr2D(it, boundary, save, cglob = None, cloc = 0, krang = np.arange(0.,200.,10.), nrang  = np.arange(0,50,1), plot = False, resolution = 100, coarse_grid_resolution = 10):
 	#c/err
-	err_r = np.zeros((len(krang),lim))
+	err_r = np.zeros((len(krang),len(nrang)))
 	p = helmholtz(boundary = boundary)
 	xi = 0
 	for k in krang:
@@ -261,7 +261,7 @@ def knerr2D(it, lim ,boundary, save, cglob = None, cloc = 0, krang = np.arange(0
 		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus)
 		d = gq["d"]
 		u = d.solve(mus)
-		for n in range(lim):
+		for n in nrang:
 			e_r = []
 			for i in range(it):
 				print k, n
@@ -273,7 +273,7 @@ def knerr2D(it, lim ,boundary, save, cglob = None, cloc = 0, krang = np.arange(0
 			err_r[xi][yi]=np.mean(e_r)
 			yi+=1
 		xi+=1
-	X,Y = np.meshgrid(krang, range(lim))
+	X,Y = np.meshgrid(krang, nrang)
 	data = np.vstack([X.T.ravel(),Y.T.ravel(),err_r.ravel()]).T
 	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
 	if plot:

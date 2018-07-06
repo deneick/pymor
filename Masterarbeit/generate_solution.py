@@ -46,7 +46,8 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 		while (maxnorm > testlimit and progress > 1e-16):
 			if (progress <0):
 				raise Exception
-			u_t = transop.apply(NumpyVectorArray(np.random.normal(size=transop.source.dim)))
+			vec = np.random.normal(size=(1,transop.source.dim))+1j*np.random.normal(size=(1,transop.source.dim))
+			u_t = transop.apply(NumpyVectorArray(vec))
 			basis_length = len(basis)
 			basis.append(u_t)
 			gram_schmidt(basis, offset=basis_length, product = product, copy = False)
@@ -78,7 +79,7 @@ def create_bases2(gq, lq, basis_size, transfer = 'dirichlet'):
 		else: 
 			transop = ldict["robin_transfer"]
 		for i in range(basis_size):
-			vec = np.random.normal(size=(1,transop.source.dim))
+			vec = np.random.normal(size=(1,transop.source.dim))+1j*np.random.normal(size=(1,transop.source.dim))
 			u_t = transop.apply(NumpyVectorArray(vec))
 			basis_length = len(basis)
 			basis.append(u_t)
