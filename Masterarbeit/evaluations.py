@@ -19,6 +19,7 @@ lim = maximale Basisgroesse
 
 from problems import *
 import numpy as np
+import sys
 from pymor.basic import *
 from localize_problem import *
 from constants import *
@@ -33,18 +34,20 @@ def evaluation(it, lim, k, boundary, save, cglob = 0, cloc = 0, plot = False, re
 	u = d.solve(mus)
 	h1_dirichlet = []
 	h1_robin = []
-	for i in range(lim):
+	nrang = np.arange(0,lim,2)
+	for i in nrang:
 		print "i: ", i
 		h1d = []
 		h1r = []
 		for j in range(it):
-			print "i: ", i, "j: ", j
+			print j,
+			sys.stdout.flush()
 			print time.localtime(time.time()).tm_hour , " : ", time.localtime(time.time()).tm_min , " : ", time.localtime(time.time()).tm_sec
-			basis_dirichlet = create_bases2(gq,lq,i)
-			ru_dirichlet = reconstruct_solution(gq,lq,basis_dirichlet)
+			basis_dirichlet = create_bases2(gq,lq,i, silent = True)
+			ru_dirichlet = reconstruct_solution(gq,lq,basis_dirichlet, silent = True)
 			del basis_dirichlet
-			basis_robin = create_bases2(gq,lq,i,transfer = 'robin')
-			ru_robin = reconstruct_solution(gq,lq,basis_robin)
+			basis_robin = create_bases2(gq,lq,i,transfer = 'robin', silent = True)
+			ru_robin = reconstruct_solution(gq,lq,basis_robin, silent = True)
 			del basis_robin
 			dif_dirichlet = u -ru_dirichlet
 			dif_robin = u-ru_robin
@@ -55,16 +58,17 @@ def evaluation(it, lim, k, boundary, save, cglob = 0, cloc = 0, plot = False, re
 	limits = [0, 25, 50, 75, 100]
 	means_dirichlet_h1 = np.mean(h1_dirichlet, axis = 1)
 	means_robin_h1 = np.mean(h1_robin, axis = 1)
-	percentiles_dirichlet_h1 = np.array(np.percentile(h1_dirichlet, limits, axis=1))
-	percentiles_robin_h1 = np.array(np.percentile(h1_robin, limits, axis=1))
+	#percentiles_dirichlet_h1 = np.array(np.percentile(h1_dirichlet, limits, axis=1))
+	#percentiles_robin_h1 = np.array(np.percentile(h1_robin, limits, axis=1))
 	#import ipdb; ipdb.set_trace()
-	data = np.vstack([means_dirichlet_h1, percentiles_dirichlet_h1, means_robin_h1, percentiles_robin_h1]).T
+	#data = np.vstack([means_dirichlet_h1, percentiles_dirichlet_h1, means_robin_h1, percentiles_robin_h1]).T
+	data = np.vstack([nrang, means_dirichlet_h1, means_robin_h1]).T
 	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
 	if plot:
 		from matplotlib import pyplot as plt
 		plt.figure()
-		plt.semilogy(range(lim), means_dirichlet_h1, label = "Dirichlet h1")
-		plt.semilogy(range(lim), means_robin_h1, label = "Robin h1")
+		plt.semilogy(nrang, means_dirichlet_h1, label = "Dirichlet h1")
+		plt.semilogy(nrang, means_robin_h1, label = "Robin h1")
 		plt.legend(loc='upper right')
 		plt.xlabel('Basis size')
 		plt.show()
@@ -167,12 +171,12 @@ def test(transfer = 'robin',boundary = 'dirichlet', n=15,k=6.,cglob= 6, cloc=6.,
 	print d.h1_norm(dif)[0]/d.h1_norm(u)[0]
 	d.visualize((dif.real, dif.imag, u.real, u.imag, ru.real, ru.imag), legend = ('dif.real', 'dif.imag', 'u.real', 'u.imag', 'ru.real', 'ru.imag'), separate_colorbars = True, title = title)
 
-def kerr(it, n, boundary, save, cglob = None, cloc = 0, rang = np.arange(0.2,50.,.2), plot = False, resolution = 200, coarse_grid_resolution = 10):
+def kerr(it, n, boundary, save, cglob = None, cloc = 0, rang = np.arange(0.2,50.,.2), plot = False, resolution = 50, coarse_grid_resolution = 10):
 	#k/err
 	err_d =[]
 	err_r = []
 	p = helmholtz(boundary = boundary)
-	usecglob = not (cglob is None)
+	usecglob = (cglob is None)
 	for k in rang:
 		print k
 		if usecglob:
@@ -184,12 +188,13 @@ def kerr(it, n, boundary, save, cglob = None, cloc = 0, rang = np.arange(0.2,50.
 		e_d = []
 		e_r = []
 		for i in range(it):
-			print k, i
-			bases = create_bases2(gq,lq,n,transfer = 'robin')
-			ru_r = reconstruct_solution(gq, lq, bases)
+			print i,
+			sys.stdout.flush()
+			bases = create_bases2(gq,lq,n,transfer = 'robin', silent = True)
+			ru_r = reconstruct_solution(gq, lq, bases, silent = True)
 			del bases
-			bases = create_bases2(gq,lq,n,transfer = 'dirichlet')
-			ru_d = reconstruct_solution(gq, lq, bases)
+			bases = create_bases2(gq,lq,n,transfer = 'dirichlet', silent = True)
+			ru_d = reconstruct_solution(gq, lq, bases, silent = True)
 			del bases
 			dif_d = u-ru_d
 			dif_r = u-ru_r
@@ -226,9 +231,10 @@ def cerr2D(it, n, k, boundary, save, cglob = 0, rang = np.arange(-10.,10.,1.), p
 			u = d.solve(mus)
 			e_r = []
 			for i in range(it):
-				print c, i
-				bases = create_bases2(gq,lq,n,transfer = 'robin')
-				ru_r = reconstruct_solution(gq, lq, bases)
+				print i,
+				sys.stdout.flush()
+				bases = create_bases2(gq,lq,n,transfer = 'robin', silent = True)
+				ru_r = reconstruct_solution(gq, lq, bases, silent = True)
 				del bases
 				dif_r = u-ru_r
 				e_r.append(d.h1_norm(dif_r)[0]/d.h1_norm(u)[0])
@@ -262,11 +268,13 @@ def knerr2D(it, boundary, save, cglob = None, cloc = 0, krang = np.arange(0.,200
 		d = gq["d"]
 		u = d.solve(mus)
 		for n in nrang:
+			print k, n
 			e_r = []
 			for i in range(it):
-				print k, n
-				bases = create_bases2(gq,lq,n,transfer = 'robin')
-				ru_r = reconstruct_solution(gq, lq, bases)
+				print i,
+				sys.stdout.flush()
+				bases = create_bases2(gq,lq,n,transfer = 'robin', silent = True)
+				ru_r = reconstruct_solution(gq, lq, bases, silent = True)
 				del bases
 				dif_r = u-ru_r
 				e_r.append(d.h1_norm(dif_r)[0]/d.h1_norm(u)[0])
@@ -285,3 +293,92 @@ def knerr2D(it, boundary, save, cglob = None, cloc = 0, krang = np.arange(0.,200
 		surf = ax.plot_surface(X,Y,err_r,  cstride = 1, rstride =1, cmap = cm.coolwarm, linewidth=0, antialiased=False)
 		fig.colorbar(surf, shrink =0.5, aspect=5)
 		plt.show()
+
+def findcloc(it=50, k=20, n=15, s = 4., smin = 0.5, cloc = 0., boundary = 'robin'):
+	p = helmholtz(boundary = boundary)
+	dic = {}
+	while(True):
+		if cloc in dic:
+			err0 = dic[cloc]
+		else: 
+			mus = {'k': k, 'c_glob': -1j*k, 'c_loc': cloc}
+			gq, lq = localize_problem(p, coarse_grid_resolution=10, fine_grid_resolution=50, mus = mus)
+			d = gq["d"]
+			u = d.solve(mus)
+			e_r = []
+			print "cloc: ", cloc, "k: ", k
+			for i in range(it):
+				print i,
+				sys.stdout.flush()
+				bases = create_bases2(gq,lq,n,transfer = 'robin', silent = True)
+				ru_r = reconstruct_solution(gq, lq, bases, silent = True)
+				del bases
+				dif_r = u-ru_r
+				e_r.append(d.h1_norm(dif_r)[0]/d.h1_norm(u)[0])
+			err0 = np.mean(e_r)
+			dic[cloc]=err0
+		clocs = [cloc-s, cloc +s, cloc -s*1j, cloc +s*1j]
+		errs = []
+		for cloc1 in clocs:
+			if cloc1 in dic:
+				errs.append(dic[cloc1])
+			else:
+				mus = {'k': k, 'c_glob': -1j*k, 'c_loc': cloc1}
+				gq, lq = localize_problem(p, coarse_grid_resolution=10, fine_grid_resolution=50, mus = mus)
+				d = gq["d"]
+				u = d.solve(mus)
+				e_r = []
+				print "cloc: ", cloc, "cloc1: ", cloc1, "s: ", s, "k: ", k
+				for i in range(it):
+					print i, #"cloc: ", cloc, "cloc1: ", cloc1, "s: ", s, "i: " ,i
+					sys.stdout.flush()
+					bases = create_bases2(gq,lq,n,transfer = 'robin', silent = True)
+					ru_r = reconstruct_solution(gq, lq, bases, silent = True)
+					del bases
+					dif_r = u-ru_r
+					e_r.append(d.h1_norm(dif_r)[0]/d.h1_norm(u)[0])
+				err = np.mean(e_r)
+				errs.append(err)
+				dic[cloc1]=err
+		print errs
+		print err0
+		if np.min(errs)< err0:
+			cloc = clocs[np.argmin(errs)]
+			print "new cloc: ", cloc
+		else: 
+			s = s/2.
+			print "new s: ", s
+			if s < smin:
+				print "found cloc!: ", cloc
+				return cloc
+
+def ckerr2D(it, n, boundary, save, cglob = None, krang = np.arange(0.,20.,2.), crang  = np.arange(0.,10.,1.), resolution = 50, coarse_grid_resolution = 10):
+	#c/err
+	err_r = np.zeros((len(krang),len(crang)))
+	p = helmholtz(boundary = boundary)
+	xi = 0
+	for k in krang:
+		yi = 0
+		if cglob is None:
+			cglob = -1j*k
+		for cloc in crang:
+			print k, cloc
+			mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+			gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus)
+			d = gq["d"]
+			u = d.solve(mus)
+			e_r = []
+			for i in range(it):
+				print i,
+				sys.stdout.flush()
+				bases = create_bases2(gq,lq,n,transfer = 'robin', silent = True)
+				ru_r = reconstruct_solution(gq, lq, bases, silent = True)
+				del bases
+				dif_r = u-ru_r
+				e_r.append(d.h1_norm(dif_r)[0]/d.h1_norm(u)[0])
+			err_r[xi][yi]=np.mean(e_r)
+			yi+=1
+		xi+=1
+	X,Y = np.meshgrid(krang, crang)
+	data = np.vstack([X.T.ravel(),Y.T.ravel(),err_r.ravel()]).T
+	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])

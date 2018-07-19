@@ -61,9 +61,10 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 		bases[space] = basis
 	return bases
 
-def create_bases2(gq, lq, basis_size, transfer = 'dirichlet'):
+def create_bases2(gq, lq, basis_size, transfer = 'dirichlet', silent = False):
 	#Basiserstellung mit Basisgroesse
-	print "creating bases"
+	if not silent:
+		print "creating bases"
 	bases = {}
 	for space in gq["spaces"]:
 		ldict = lq[space]
@@ -87,8 +88,9 @@ def create_bases2(gq, lq, basis_size, transfer = 'dirichlet'):
 		bases[space] = basis
 	return bases
 
-def reconstruct_solution(gq, lq, bases):
-	print "reconstructing solution"	
+def reconstruct_solution(gq, lq, bases, silent = False):
+	if not silent:
+		print "reconstructing solution"	
 	op = gq["op"]
 	rhs = gq["rhs"]
 	localizer = gq["localizer"]

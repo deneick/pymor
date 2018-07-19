@@ -4,4 +4,4 @@ set_log_levels(levels={'pymor': 'WARN'})
 if not os.path.exists("dats"):
 	os.makedirs("dats")
 
-kerr(it = 10, n = 15, boundary = 'dirichlet', save = "dats/k_err_bsp2.dat", cloc = 1.5)
+cerr2D(30,15,20, 'robin', "dats/cerr2D_bsp4_20_big.dat", rang = np.arange(-20.,20.,1.), cglob = 6, resolution = 50)
