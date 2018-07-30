@@ -171,16 +171,17 @@ def test(transfer = 'robin',boundary = 'dirichlet', n=15,k=6.,cglob= 6, cloc=6.,
 	print d.h1_norm(dif)[0]/d.h1_norm(u)[0]
 	d.visualize((dif.real, dif.imag, u.real, u.imag, ru.real, ru.imag), legend = ('dif.real', 'dif.imag', 'u.real', 'u.imag', 'ru.real', 'ru.imag'), separate_colorbars = True, title = title)
 
-def kerr(it, n, boundary, save, cglob = None, cloc = 0, rang = np.arange(0.2,50.,.2), plot = False, resolution = 50, coarse_grid_resolution = 10):
+def kerr(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, rang = np.arange(0.1,50.1,.2), plot = False, resolution = 100, coarse_grid_resolution = 10):
 	#k/err
 	err_d =[]
 	err_r = []
 	p = helmholtz(boundary = boundary)
 	usecglob = (cglob is None)
 	for k in rang:
-		print k
 		if usecglob:
 			cglob = -1j*k 			######wichtig!!
+		cloc = cloc0+ cloc1*k+cloc2*k**2
+		print "k: ", k, "cloc: ", cloc
 		mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus)
 		d = gq["d"]
@@ -254,15 +255,17 @@ def cerr2D(it, n, k, boundary, save, cglob = 0, rang = np.arange(-10.,10.,1.), p
 		fig.colorbar(surf, shrink =0.5, aspect=5)
 		plt.show()
 
-def knerr2D(it, boundary, save, cglob = None, cloc = 0, krang = np.arange(0.,200.,10.), nrang  = np.arange(0,50,1), plot = False, resolution = 100, coarse_grid_resolution = 10):
+def knerr2D(it, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, krang = np.arange(0.1,200.1,10.), nrang  = np.arange(0,100,5), plot = False, resolution = 100, coarse_grid_resolution = 10):
 	#c/err
 	err_r = np.zeros((len(krang),len(nrang)))
 	p = helmholtz(boundary = boundary)
+	usecglob = (cglob is None)
 	xi = 0
 	for k in krang:
 		yi = 0
-		if cglob is None:
+		if usecglob:
 			cglob = -1j*k
+		cloc = cloc0+ cloc1*k+cloc2*k**2
 		mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus)
 		d = gq["d"]
@@ -270,7 +273,7 @@ def knerr2D(it, boundary, save, cglob = None, cloc = 0, krang = np.arange(0.,200
 		for n in nrang:
 			print k, n
 			e_r = []
-			for i in range(it):
+			for i in range(min(20-n/5,it)):
 				print i,
 				sys.stdout.flush()
 				bases = create_bases2(gq,lq,n,transfer = 'robin', silent = True)
