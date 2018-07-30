@@ -26,7 +26,7 @@ from constants import *
 from generate_solution import *
 
 def evaluation(it, lim, k, boundary, save, cglob = 0, cloc = 0, plot = False, resolution = 200, coarse_grid_resolution = 10):
-	import time
+	#import time
 	p = helmholtz(boundary = boundary)
 	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus)
@@ -42,7 +42,7 @@ def evaluation(it, lim, k, boundary, save, cglob = 0, cloc = 0, plot = False, re
 		for j in range(it):
 			print j,
 			sys.stdout.flush()
-			print time.localtime(time.time()).tm_hour , " : ", time.localtime(time.time()).tm_min , " : ", time.localtime(time.time()).tm_sec
+			#print time.localtime(time.time()).tm_hour , " : ", time.localtime(time.time()).tm_min , " : ", time.localtime(time.time()).tm_sec
 			basis_dirichlet = create_bases2(gq,lq,i)
 			ru_dirichlet = reconstruct_solution(gq,lq,basis_dirichlet)
 			del basis_dirichlet
@@ -74,7 +74,7 @@ def evaluation(it, lim, k, boundary, save, cglob = 0, cloc = 0, plot = False, re
 		plt.show()
 
 def ungleichung(it, k, boundary, save, nrang  = np.arange(0,100,5), cglob = 0, cloc = 0, plot=False, resolution = 200, coarse_grid_resolution = 10):
-	import time
+	#import time
 	p = helmholtz(boundary = boundary)
 	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calT = True, calQ = True)
@@ -88,7 +88,7 @@ def ungleichung(it, k, boundary, save, nrang  = np.arange(0,100,5), cglob = 0, c
 		for j in range(min(20-n/5,it)):
 			print j,
 			sys.stdout.flush()
-			print time.localtime(time.time()).tm_hour , " : ", time.localtime(time.time()).tm_min , " : ", time.localtime(time.time()).tm_sec
+			#print time.localtime(time.time()).tm_hour , " : ", time.localtime(time.time()).tm_min , " : ", time.localtime(time.time()).tm_sec
 			ls = []
 			rs = []
 			rs2 = []
