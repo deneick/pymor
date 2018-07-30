@@ -73,7 +73,7 @@ def evaluation(it, lim, k, boundary, save, cglob = 0, cloc = 0, plot = False, re
 		plt.xlabel('Basis size')
 		plt.show()
 
-def ungleichung(it, lim, k, boundary, save, cglob = 0, cloc = 0, plot=False, resolution = 200, coarse_grid_resolution = 10):
+def ungleichung(it, k, boundary, save, nrang  = np.arange(0,100,5), cglob = 0, cloc = 0, plot=False, resolution = 200, coarse_grid_resolution = 10):
 	import time
 	p = helmholtz(boundary = boundary)
 	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
@@ -83,15 +83,15 @@ def ungleichung(it, lim, k, boundary, save, cglob = 0, cloc = 0, plot=False, res
 	LS = []
 	RS = []
 	RS2 = []
-	for i in range(lim):
-		print i
-		for j in range(it):
-			print i, j
+	for n in nrang:
+		print n
+		for j in range(min(20-n/5,it)):
+			print n, j
 			print time.localtime(time.time()).tm_hour , " : ", time.localtime(time.time()).tm_min , " : ", time.localtime(time.time()).tm_sec
 			ls = []
 			rs = []
 			rs2 = []
-			bases = create_bases2(gq,lq,i,transfer = 'robin')
+			bases = create_bases2(gq,lq,n,transfer = 'robin')
 			rssum = 0
 			rssum2 = 0
 			for space in gq["spaces"]:
@@ -112,13 +112,13 @@ def ungleichung(it, lim, k, boundary, save, cglob = 0, cloc = 0, plot=False, res
 		RS2.append(rs2)
 	means_ls = np.mean(LS, axis = 1)
 	means_rs2 = np.mean(RS2, axis = 1)
-	data = np.vstack([means_ls, means_rs2]).T
+	data = np.vstack([nrang, means_ls, means_rs2]).T
 	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
 	if plot:	
 		from matplotlib import pyplot as plt
 		plt.figure()
-		plt.semilogy(range(lim), means_ls, label = "ls")
-		plt.semilogy(range(lim), means_rs2, label = "rs2")
+		plt.semilogy(nrang, means_ls, label = "ls")
+		plt.semilogy(nrang, means_rs2, label = "rs2")
 		plt.legend(loc='upper right')
 		plt.xlabel('Basis size')
 		plt.show()
@@ -216,14 +216,16 @@ def kerr(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, r
 		plt.legend(loc='upper right')
 		plt.show()
 
-def cerr2D(it, n, k, boundary, save, cglob = 0, rang = np.arange(-10.,10.,1.), plot = False, resolution = 200, coarse_grid_resolution = 10):
+def cerr2D(it, n, k, boundary, save, cglob = 0, rang = np.arange(-10.,10.,1.), yrang = None, plot = False, resolution = 200, coarse_grid_resolution = 10):
 	#c/err
-	err_r = np.zeros((len(rang),len(rang)))
+	if yrang is None:
+		yrang = rang
+	err_r = np.zeros((len(rang),len(yrang)))
 	p = helmholtz(boundary = boundary)
 	xi = 0
 	for x in rang:
 		yi = 0
-		for y in rang:
+		for y in yrang:
 			c = x+1j*y
 			print c
 			mus = {'k': k, 'c_glob': cglob, 'c_loc': c}
@@ -242,7 +244,7 @@ def cerr2D(it, n, k, boundary, save, cglob = 0, rang = np.arange(-10.,10.,1.), p
 			err_r[xi][yi]=np.mean(e_r)
 			yi+=1
 		xi+=1
-	X,Y = np.meshgrid(rang, rang)
+	X,Y = np.meshgrid(rang, yrang)
 	data = np.vstack([X.T.ravel(),Y.T.ravel(),err_r.ravel()]).T
 	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
 	if plot:
