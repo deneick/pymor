@@ -86,12 +86,13 @@ def ungleichung(it, k, boundary, save, nrang  = np.arange(0,100,5), cglob = 0, c
 	for n in nrang:
 		print n
 		for j in range(min(20-n/5,it)):
-			print n, j
+			print j,
+			sys.stdout.flush()
 			print time.localtime(time.time()).tm_hour , " : ", time.localtime(time.time()).tm_min , " : ", time.localtime(time.time()).tm_sec
 			ls = []
 			rs = []
 			rs2 = []
-			bases = create_bases2(gq,lq,n,transfer = 'robin')
+			bases = create_bases2(gq,lq,n,transfer = 'robin', silent = True)
 			rssum = 0
 			rssum2 = 0
 			for space in gq["spaces"]:
@@ -105,7 +106,7 @@ def ungleichung(it, k, boundary, save, nrang  = np.arange(0,100,5), cglob = 0, c
 				T1 = T - B.dot(B.conj().T).dot(M_sparse.dot(T))
 				maxval = operator_svd2(T1, S, M_sparse)[0][0]
 				rssum2 += maxval**2
-			ru = reconstruct_solution(gq,lq,bases)
+			ru = reconstruct_solution(gq,lq,bases, silent = True)
 			ls.append(d.h1_norm(u-ru)[0]/d.h1_norm(u)[0])
 			rs2.append(4*np.sqrt(rssum2))
 		LS.append(ls)
@@ -136,11 +137,12 @@ def accuracy(it, num_testvecs, k, boundary, save, cglob = 0, cloc = 0, plot = Fa
 	for target_accuracy in logspace:
 		print target_accuracy
 		for i in range(it):
-			print i
+			print i,
+			sys.stdout.flush()
 			err = []
 			#import ipdb; ipdb.set_trace()
-			bases = create_bases(gq, lq, num_testvecs, transfer = 'robin', target_accuracy = target_accuracy)
-			ru = reconstruct_solution(gq, lq, bases)
+			bases = create_bases(gq, lq, num_testvecs, transfer = 'robin', target_accuracy = target_accuracy, silent = True)
+			ru = reconstruct_solution(gq, lq, bases, silent = True)
 			err.append(d.h1_norm(u-ru)[0]/d.h1_norm(u)[0])
 		ERR.append(err)
 	means = np.mean(ERR, axis = 1)
