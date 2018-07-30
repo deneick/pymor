@@ -43,11 +43,11 @@ def evaluation(it, lim, k, boundary, save, cglob = 0, cloc = 0, plot = False, re
 			print j,
 			sys.stdout.flush()
 			print time.localtime(time.time()).tm_hour , " : ", time.localtime(time.time()).tm_min , " : ", time.localtime(time.time()).tm_sec
-			basis_dirichlet = create_bases2(gq,lq,i, silent = True)
-			ru_dirichlet = reconstruct_solution(gq,lq,basis_dirichlet, silent = True)
+			basis_dirichlet = create_bases2(gq,lq,i)
+			ru_dirichlet = reconstruct_solution(gq,lq,basis_dirichlet)
 			del basis_dirichlet
-			basis_robin = create_bases2(gq,lq,i,transfer = 'robin', silent = True)
-			ru_robin = reconstruct_solution(gq,lq,basis_robin, silent = True)
+			basis_robin = create_bases2(gq,lq,i,transfer = 'robin')
+			ru_robin = reconstruct_solution(gq,lq,basis_robin)
 			del basis_robin
 			dif_dirichlet = u -ru_dirichlet
 			dif_robin = u-ru_robin
@@ -92,7 +92,7 @@ def ungleichung(it, k, boundary, save, nrang  = np.arange(0,100,5), cglob = 0, c
 			ls = []
 			rs = []
 			rs2 = []
-			bases = create_bases2(gq,lq,n,transfer = 'robin', silent = True)
+			bases = create_bases2(gq,lq,n,transfer = 'robin')
 			rssum = 0
 			rssum2 = 0
 			for space in gq["spaces"]:
@@ -106,7 +106,7 @@ def ungleichung(it, k, boundary, save, nrang  = np.arange(0,100,5), cglob = 0, c
 				T1 = T - B.dot(B.conj().T).dot(M_sparse.dot(T))
 				maxval = operator_svd2(T1, S, M_sparse)[0][0]
 				rssum2 += maxval**2
-			ru = reconstruct_solution(gq,lq,bases, silent = True)
+			ru = reconstruct_solution(gq,lq,bases)
 			ls.append(d.h1_norm(u-ru)[0]/d.h1_norm(u)[0])
 			rs2.append(4*np.sqrt(rssum2))
 		LS.append(ls)
@@ -141,8 +141,8 @@ def accuracy(it, num_testvecs, k, boundary, save, cglob = 0, cloc = 0, plot = Fa
 			sys.stdout.flush()
 			err = []
 			#import ipdb; ipdb.set_trace()
-			bases = create_bases(gq, lq, num_testvecs, transfer = 'robin', target_accuracy = target_accuracy, silent = True)
-			ru = reconstruct_solution(gq, lq, bases, silent = True)
+			bases = create_bases(gq, lq, num_testvecs, transfer = 'robin', target_accuracy = target_accuracy)
+			ru = reconstruct_solution(gq, lq, bases)
 			err.append(d.h1_norm(u-ru)[0]/d.h1_norm(u)[0])
 		ERR.append(err)
 	means = np.mean(ERR, axis = 1)
@@ -165,8 +165,8 @@ def test(transfer = 'robin',boundary = 'dirichlet', n=15,k=6.,cglob= 6, cloc=6.,
 	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 	p = helmholtz(boundary = boundary)
 	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
-	basis = create_bases2(gq,lq,n,transfer = transfer)
-	ru = reconstruct_solution(gq,lq,basis)
+	basis = create_bases2(gq,lq,n,transfer = transfer, silent = False)
+	ru = reconstruct_solution(gq,lq,basis, silent = False)
 	d = gq["d"]
 	u = d.solve(mus)
 	dif = u-ru
@@ -193,11 +193,11 @@ def kerr(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, r
 		for i in range(it):
 			print i,
 			sys.stdout.flush()
-			bases = create_bases2(gq,lq,n,transfer = 'robin', silent = True)
-			ru_r = reconstruct_solution(gq, lq, bases, silent = True)
+			bases = create_bases2(gq,lq,n,transfer = 'robin')
+			ru_r = reconstruct_solution(gq, lq, bases)
 			del bases
-			bases = create_bases2(gq,lq,n,transfer = 'dirichlet', silent = True)
-			ru_d = reconstruct_solution(gq, lq, bases, silent = True)
+			bases = create_bases2(gq,lq,n,transfer = 'dirichlet')
+			ru_d = reconstruct_solution(gq, lq, bases)
 			del bases
 			dif_d = u-ru_d
 			dif_r = u-ru_r
@@ -238,8 +238,8 @@ def cerr2D(it, n, k, boundary, save, cglob = 0, rang = np.arange(-10.,10.,1.), y
 			for i in range(it):
 				print i,
 				sys.stdout.flush()
-				bases = create_bases2(gq,lq,n,transfer = 'robin', silent = True)
-				ru_r = reconstruct_solution(gq, lq, bases, silent = True)
+				bases = create_bases2(gq,lq,n,transfer = 'robin')
+				ru_r = reconstruct_solution(gq, lq, bases)
 				del bases
 				dif_r = u-ru_r
 				e_r.append(d.h1_norm(dif_r)[0]/d.h1_norm(u)[0])
@@ -280,8 +280,8 @@ def knerr2D(it, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, k
 			for i in range(min(20-n/5,it)):
 				print i,
 				sys.stdout.flush()
-				bases = create_bases2(gq,lq,n,transfer = 'robin', silent = True)
-				ru_r = reconstruct_solution(gq, lq, bases, silent = True)
+				bases = create_bases2(gq,lq,n,transfer = 'robin')
+				ru_r = reconstruct_solution(gq, lq, bases)
 				del bases
 				dif_r = u-ru_r
 				e_r.append(d.h1_norm(dif_r)[0]/d.h1_norm(u)[0])
@@ -317,8 +317,8 @@ def findcloc(it=50, k=20, n=15, s = 4., smin = 0.5, cloc = 0., boundary = 'robin
 			for i in range(it):
 				print i,
 				sys.stdout.flush()
-				bases = create_bases2(gq,lq,n,transfer = 'robin', silent = True)
-				ru_r = reconstruct_solution(gq, lq, bases, silent = True)
+				bases = create_bases2(gq,lq,n,transfer = 'robin')
+				ru_r = reconstruct_solution(gq, lq, bases)
 				del bases
 				dif_r = u-ru_r
 				e_r.append(d.h1_norm(dif_r)[0]/d.h1_norm(u)[0])
@@ -339,8 +339,8 @@ def findcloc(it=50, k=20, n=15, s = 4., smin = 0.5, cloc = 0., boundary = 'robin
 				for i in range(it):
 					print i, #"cloc: ", cloc, "cloc1: ", cloc1, "s: ", s, "i: " ,i
 					sys.stdout.flush()
-					bases = create_bases2(gq,lq,n,transfer = 'robin', silent = True)
-					ru_r = reconstruct_solution(gq, lq, bases, silent = True)
+					bases = create_bases2(gq,lq,n,transfer = 'robin')
+					ru_r = reconstruct_solution(gq, lq, bases)
 					del bases
 					dif_r = u-ru_r
 					e_r.append(d.h1_norm(dif_r)[0]/d.h1_norm(u)[0])
@@ -378,8 +378,8 @@ def ckerr2D(it, n, boundary, save, cglob = None, krang = np.arange(0.,20.,2.), c
 			for i in range(it):
 				print i,
 				sys.stdout.flush()
-				bases = create_bases2(gq,lq,n,transfer = 'robin', silent = True)
-				ru_r = reconstruct_solution(gq, lq, bases, silent = True)
+				bases = create_bases2(gq,lq,n,transfer = 'robin')
+				ru_r = reconstruct_solution(gq, lq, bases)
 				del bases
 				dif_r = u-ru_r
 				e_r.append(d.h1_norm(dif_r)[0]/d.h1_norm(u)[0])

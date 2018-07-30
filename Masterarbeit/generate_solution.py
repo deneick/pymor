@@ -7,13 +7,14 @@ import numpy as np
 import scipy
 from constants import *
 
-def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None, target_accuracy = 1e-3):
+def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None, target_accuracy = 1e-3, silent = True):
 	#adaptive Basiserstellung
 	if testlimit is None:
 		print "calculating constants"
 		#calculate_lambda_min(gq, lq)
 		#calculate_Psi_norm(gq,lq)
-	print "creating bases"
+	if not silent:
+		print "creating bases"
 	bases = {}
 	for space in gq["spaces"]:
 		ldict = lq[space]
@@ -57,7 +58,7 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 		bases[space] = basis
 	return bases
 
-def create_bases2(gq, lq, basis_size, transfer = 'dirichlet', silent = False):
+def create_bases2(gq, lq, basis_size, transfer = 'dirichlet', silent = True):
 	#Basiserstellung mit Basisgroesse
 	if not silent:
 		print "creating bases"
@@ -84,7 +85,7 @@ def create_bases2(gq, lq, basis_size, transfer = 'dirichlet', silent = False):
 		bases[space] = basis
 	return bases
 
-def reconstruct_solution(gq, lq, bases, silent = False):
+def reconstruct_solution(gq, lq, bases, silent = True):
 	if not silent:
 		print "reconstructing solution"	
 	op = gq["op"]
