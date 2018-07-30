@@ -24,11 +24,7 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 		basis = lsol.copy()
 		product = ldict["range_product"]
 		norm = induced_norm(product)
-		try:		
-			gram_schmidt(basis, copy=False, product = product)
-		except ExtensionError:
-			print "Extension Error bei lsol"
-
+		gram_schmidt(basis, copy=False, product = product)
 		if transfer == 'dirichlet':
 			transop = ldict["dirichlet_transfer"]
 		else: 

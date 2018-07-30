@@ -95,8 +95,8 @@ def calculate_testlimit(gq, lq, space, num_testvecs, target_accuracy, max_failur
 	local_failure_tolerance = max_failure_probability / ( (coarse_grid_resolution -1)*4. )
 	testlimit_zeta = testlimit(
                 failure_tolerance=local_failure_tolerance,
-                dim_S=ldict["transfer_operator"].source.dim,
-                dim_R=ldict["transfer_operator"].range.dim,
+                dim_S=ldict["robin_transfer"].source.dim,
+                dim_R=ldict["robin_transfer"].range.dim,
                 num_testvecs=num_testvecs,
                 target_error=tol_i,
                 lambda_min=ldict["lambda_min"]
