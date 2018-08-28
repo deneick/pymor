@@ -76,6 +76,8 @@ def calculate_Psi_norm_r(gq,lq):
 		print "calculated Psi_norm: ", maxval
 	print "calculated all Psi_norms"
 
+def calculate_inf_sup_constant(gq,lq):
+	print "hi"
 
 def testlimit(failure_tolerance, dim_S, dim_R, num_testvecs, target_error, lambda_min):
 	"""

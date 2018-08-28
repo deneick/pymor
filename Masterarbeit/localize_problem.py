@@ -89,6 +89,9 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 
 	full_l2_product = d.products["l2"].assemble()
 	full_h1_product = d.products["h1"].assemble()
+	global_quantities["h1_prod"] = full_h1_product
+	full_h1_0_product = d.products["h1_0"].assemble()
+	global_quantities["h1_0_prod"] = full_h1_0_product
 	for xpos in range(coarse_grid_resolution-1):
 		for ypos in range(coarse_grid_resolution-1):
 			#print "localizing..."
