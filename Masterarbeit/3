@@ -1,0 +1,467 @@
+from problems import *
+import numpy as np
+import sys
+from pymor.basic import *
+from localize_problem import *
+from constants import *
+from generate_solution import *
+
+set_log_levels(levels={'pymor': 'WARN'})
+
+boundary = 'dirichlet'
+cglob= 6
+cloc=6.
+resolution = 50
+coarse_grid_resolution = 10
+p = helmholtz(boundary = boundary)
+
+import time
+
+A = []
+B = []
+C = []
+K = np.arange(0,5,.5)
+for k in K:
+	print k
+	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
+	bases = create_bases2(gq, lq, 15, silent = False)
+	t = time.time()
+	a = calculate_inf_sup_constant(gq, lq, bases)
+	print time.time()-t, a
+	t = time.time()
+	b = calculate_inf_sup_constant2(gq, lq)
+	print time.time()-t, b
+	t = time.time()
+	c = calculate_continuity_constant(gq, lq)
+	print time.time()-t, c
+	A.append(a)
+	B.append(b)
+	C.append(c)
+
+from matplotlib import pyplot as plt
+plt.figure()
+plt.plot(K, A, label = "inf-sup-constant")
+plt.xlabel('k')
+plt.legend(loc='upper right')
+plt.show()
+
+plt.figure()
+plt.plot(K, B, label = "inf-sup-constant2")
+plt.xlabel('k')
+plt.legend(loc='upper right')
+plt.show()
+
+plt.figure()
+plt.plot(K, C, label = "continuity-constant")
+plt.xlabel('k')
+plt.legend(loc='upper right')
+plt.show()
+
+
+
+
+
+
+
+
+
+
+A = gq["op"]._matrix
+H1 = gq["h1_prod"]._matrix
+H1_0 = gq["h1_0_prod"]._matrix
+Y = H1_0
+X = H1
+
+M = A.T.dot(sp.inv(Y)).dot(A)
+
+import time
+t = time.time()
+eigvals = sp.eigs(M, M=X, which = 'SM')[0]
+print time.time()-t
+eigvals = np.sqrt(np.abs(eigvals))
+eigvals.sort()
+print eigvals[0]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+from problems import *
+import numpy as np
+import sys
+from pymor.basic import *
+from localize_problem import *
+from constants import *
+from generate_solution import *
+
+set_log_levels(levels={'pymor': 'WARN'})
+
+boundary = 'dirichlet'
+cglob= 6
+cloc=6.
+resolution = 50
+coarse_grid_resolution = 10
+p = helmholtz(boundary = boundary)
+
+bs = []
+gs = []
+ks = np.arange(0.1,10,.1)
+for k in ks:
+	print k
+	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
+	bases = create_bases2(gq, lq, 15, silent = False)
+	op = gq["op"]
+	rhs = gq["rhs"]
+	localizer = gq["localizer"]
+	spaces = gq["spaces"]
+	operator_reductor = LRBOperatorProjection(op, rhs, localizer, spaces, bases, spaces, bases)
+	A = operator_reductor.get_reduced_operator()._matrix
+
+	H10 = gq["h1_0_prod"]
+	operator_reductor = LRBOperatorProjection(H10, rhs, localizer, spaces, bases, spaces, bases)
+	Y = operator_reductor.get_reduced_operator()._matrix
+	H1 = gq["h1_prod"]
+	operator_reductor = LRBOperatorProjection(H1, rhs, localizer, spaces, bases, spaces, bases)
+	X = operator_reductor.get_reduced_operator()._matrix
+
+	M = sp.inv(X).dot(A.T).dot(sp.inv(Y)).dot(A).todense()
+	import time
+	t = time.time()
+	eigvals = np.linalg.eigvals(M)
+	print time.time()-t
+	eigvals = np.sqrt(np.abs(eigvals))
+	eigvals.sort()
+	b = eigvals[0]
+	g = eigvals[len(eigvals)-1]
+	print b
+	print g
+	bs.append(b)
+	gs.append(g)
+
+from matplotlib import pyplot as plt
+plt.figure()
+plt.plot(ks, bs, label = "inf-sup-constant")
+#plt.plot(ks, gs, label = "continuity-constant")
+plt.xlabel('k')
+plt.legend(loc='upper right')
+plt.show()
+
+plt.figure()
+#plt.plot(ks, bs, label = "inf-sup-constant")
+plt.plot(ks, gs, label = "continuity-constant")
+plt.xlabel('k')
+plt.legend(loc='upper right')
+plt.show()
+
+
+
+plt.figure()
+plt.plot(ks, qs, label = "quotients")
+plt.xlabel('k')
+plt.legend(loc='upper right')
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+from problems import *
+import numpy as np
+import sys
+from pymor.basic import *
+from localize_problem import *
+from constants import *
+from generate_solution import *
+
+set_log_levels(levels={'pymor': 'WARN'})
+
+boundary = 'dirichlet'
+cglob= 6
+cloc=6.
+resolution = 50
+coarse_grid_resolution = 10
+p = helmholtz(boundary = boundary)
+k=6
+mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
+bases = create_bases2(gq, lq, 15, silent = False)
+
+A = gq["op"]._matrix
+H1 = gq["h1_prod"]._matrix
+H1_0 = gq["h1_0_prod"]._matrix
+Y = H1_0
+X = H1
+
+Yinv = sp.inv(Y)
+Xinv = sp.inv(X)
+M1 = Xinv.dot(A.T)
+M2 = Yinv.dot(A)
+M = Xinv.dot(A.T).dot(Yinv).dot(A)
+
+
+
+
+
+
+
+import time
+t = time.time()
+eigvals = sp.eigs(M, M=X)[0]
+print time.time()-t
+
+eigvals = np.sqrt(np.abs(eigvals))
+eigvals[::-1].sort()
+print eigvals[0]
+
+
+
+M = Xinv.dot(A.T).dot(Yinv).dot(A)
+t = time.time()
+eigvals = np.linalg.eigvals(M)[0]
+print time.time()-t
+
+
+eigvals = np.sqrt(np.abs(eigvals))
+eigvals[::-1].sort()
+print eigvals[0]
+
+
+
+
+
+
+from problems import *
+import numpy as np
+import sys
+from pymor.basic import *
+from localize_problem import *
+from constants import *
+from generate_solution import *
+
+set_log_levels(levels={'pymor': 'WARN'})
+
+boundary = 'dirichlet'
+cglob= 6
+cloc=6.
+resolution = 50
+coarse_grid_resolution = 10
+p = helmholtz(boundary = boundary)
+
+k=4
+mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
+bases = create_bases2(gq, lq, 15, silent = False)
+
+op = gq["op"]
+rhs = gq["rhs"]
+localizer = gq["localizer"]
+spaces = gq["spaces"]
+operator_reductor = LRBOperatorProjection(op, rhs, localizer, spaces, bases, spaces, bases)
+A = operator_reductor.get_reduced_operator()._matrix
+
+H10 = gq["h1_0_prod"]
+operator_reductor = LRBOperatorProjection(H10, rhs, localizer, spaces, bases, spaces, bases)
+Y = operator_reductor.get_reduced_operator()._matrix
+H1 = gq["h1_prod"]
+operator_reductor = LRBOperatorProjection(H1, rhs, localizer, spaces, bases, spaces, bases)
+X = operator_reductor.get_reduced_operator()._matrix
+
+M = sp.inv(X).dot(A.T).dot(sp.inv(Y)).dot(A).todense()
+import time
+t = time.time()
+eigvals = np.linalg.eigvals(M)
+print time.time()-t
+eigvals = np.sqrt(np.abs(eigvals))
+eigvals[::1].sort()
+print eigvals[0]
+
+
+
+
+
+import scipy.sparse.linalg as sp
+Yinv = sp.inv(Y)
+M = A.T.dot(Yinv).dot(A)
+import time
+t = time.time()
+eigvals = sp.eigs(M, M=X, which = 'SM', tol = 1e-1)[0]
+print time.time()-t
+eigvals = np.sqrt(np.abs(eigvals))
+eigvals[::1].sort()
+print eigvals[0]
+
+
+
+
+
+import scipy.sparse.linalg as sp
+
+
+
+
+
+from problems import *
+import numpy as np
+from pymor.basic import *
+set_log_levels(levels={'pymor': 'WARN'})
+import scipy.sparse.linalg as sp
+
+boundary = 'dirichlet'
+cglob= 6
+cloc=6.
+resolution = 50
+coarse_grid_resolution = 10
+p = helmholtz(boundary = boundary)
+
+bs = []
+gs = []
+cs = []
+ks = np.arange(0.1,5.0,.1)
+for k in ks:
+	print k
+	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+	diameter = 1./resolution
+	d, data = discretize_elliptic_cg(p, diameter=diameter)
+	A = d.operator.assemble(mus)._matrix
+	H1 = d.products["h1"].assemble()._matrix
+	H1_0 = d.products["h1_0"].assemble()._matrix
+	Y = H1_0
+	X = H1
+	
+	#A = np.abs(A)
+	Yinv = sp.inv(Y)
+	M = A.T.dot(Yinv).dot(A)
+	eigvals = sp.eigs(M, M=X, which = 'SM', tol=1e-2, k=1)[0]
+	eigvals = np.sqrt(np.abs(eigvals))
+	eigvals[::1].sort()
+	b = eigvals[0]
+	bs.append(b)
+
+from matplotlib import pyplot as plt
+plt.figure()
+plt.plot(ks, bs, label = "inf-sup-constant")
+#plt.plot(ks, gs, label = "continuity-constant")
+plt.xlabel('k')
+plt.legend(loc='upper right')
+plt.show()
+
+
+
+
+
+
+
+from scipy.sparse.linalg import LinearOperator
+def mv(v):
+	return M.dot(v)
+
+M1 = LinearOperator(M.shape, matvec = mv)
+
+def mv1(v): 
+	return X.dot(v)
+
+M2 = LinearOperator(X.shape, matvec = mv1)
+
+
+M1 = sp.aslinearoperator(M)
+M2 = sp.aslinearoperator(X)
+
+t = time.time()
+eigvals = sp.eigs(M1, M=M2, which = 'SM', tol=1e-2)[0]
+print time.time() -t
+
+
+
+
+
+
+
+
+
+
+from problems import *
+import numpy as np
+from pymor.basic import *
+set_log_levels(levels={'pymor': 'WARN'})
+import scipy.sparse.linalg as sp
+
+boundary = 'dirichlet'
+cglob= 6
+cloc=6.
+resolution = 50
+coarse_grid_resolution = 10
+p = helmholtz(boundary = boundary)
+
+k= 4
+mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+diameter = 1./resolution
+d, data = discretize_elliptic_cg(p, diameter=diameter)
+A = d.operator.assemble(mus)._matrix
+H1 = d.products["h1"].assemble()._matrix
+H1_0 = d.products["h1_0"].assemble()._matrix
+Y = H1_0
+X = H1
+
+import time
+t = time.time()
+#A = np.abs(A)
+Yinv = sp.inv(Y)
+print time.time()-t
+t = time.time()
+M = A.T.dot(Yinv).dot(A)
+print time.time()-t
+
+t = time.time()
+eigvals = sp.eigs(M, M=X, which = 'SM', tol = 1e-2, k=3)[0]
+print time.time()-t
+eigvals = np.sqrt(np.abs(eigvals))
+eigvals[::1].sort()
+print eigvals[0]
+
+g = eigvals[len(eigvals)-1]
+c = g/b
+print b
+print g
+
+
+
+
+
+import time
+#A = np.abs(A)
+t = time.time()
+Yinv = sp.inv(Y).todense()
+Xinv = sp.inv(X).todense()
+print time.time()-t
+t = time.time()
+M = Xinv.dot(A.T).dot(Yinv).dot(A)
+print time.time()-t
+t = time.time()
+eigvals = np.linalg.eigvals(M)
+print time.time()-t
+eigvals = np.sqrt(np.abs(eigvals))
+eigvals[::1].sort()
+b = eigvals[0]
+g = eigvals[len(eigvals)-1]
+c = g/b
+print b
+print g
