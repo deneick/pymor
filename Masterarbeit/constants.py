@@ -13,6 +13,7 @@ import scipy
 import numpy as np
 from itertools import izip
 import copy
+import scipy.sparse.linalg as sp
 
 def calculate_lambda_min(gq, lq):
 	coarse_grid_resolution = gq["coarse_grid_resolution"]
@@ -76,8 +77,59 @@ def calculate_Psi_norm_r(gq,lq):
 		print "calculated Psi_norm: ", maxval
 	print "calculated all Psi_norms"
 
-def calculate_inf_sup_constant(gq,lq):
-	print "hi"
+def calculate_inf_sup_constant(gq,lq, bases):
+	op = gq["op"]
+	rhs = gq["rhs"]
+	spaces = gq["spaces"]
+	localizer = gq["localizer"]
+	operator_reductor = LRBOperatorProjection(op, rhs, localizer, spaces, bases, spaces, bases)
+	A = operator_reductor.get_reduced_operator()._matrix
+
+	H10 = gq["h1_0_prod"]
+	operator_reductor0 = LRBOperatorProjection(H10, rhs, localizer, spaces, bases, spaces, bases)
+	Y = operator_reductor0.get_reduced_operator()._matrix
+	H1 = gq["h1_prod"]
+	operator_reductor = LRBOperatorProjection(H1, rhs, localizer, spaces, bases, spaces, bases)
+	X = operator_reductor.get_reduced_operator()._matrix
+
+	M = sp.inv(X).dot(A.T).dot(sp.inv(Y)).dot(A).todense()
+	eigvals = np.linalg.eigvals(M)
+	eigvals = np.sqrt(np.abs(eigvals))
+	eigvals.sort()
+	result = eigvals[0]
+	gq["inf_sup_constant"] =  result
+	return result
+
+def calculate_inf_sup_constant2(gq,lq):
+	A = gq["op"]._matrix
+	H1 = gq["h1_prod"]._matrix
+	H1_0 = gq["h1_0_prod"]._matrix
+	Y = H1_0
+	X = H1
+
+	M = A.T.dot(sp.inv(Y)).dot(A)
+	eigvals = sp.eigs(M, M=X, which = 'SM', tol = 1e-2)[0]
+	eigvals = np.sqrt(np.abs(eigvals))
+	eigvals.sort()
+	result = eigvals[0]
+	gq["inf_sup_constant"] =  result
+	return result
+
+def calculate_continuity_constant(gq, lq):
+	A = gq["op"]._matrix
+	H1 = gq["h1_prod"]._matrix
+	H1_0 = gq["h1_0_prod"]._matrix
+	Y = H1_0
+	X = H1
+
+	Yinv = sp.inv(Y)
+	M = A.T.dot(Yinv).dot(A)
+	eigvals = sp.eigs(M, M=X, k=1)[0]
+	eigvals = np.sqrt(np.abs(eigvals))
+	eigvals[::-1].sort()
+	result = eigvals[0]
+	gq["continuity_constant"] =  result
+	return result
 
 def testlimit(failure_tolerance, dim_S, dim_R, num_testvecs, target_error, lambda_min):
 	"""
