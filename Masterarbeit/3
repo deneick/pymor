@@ -17,27 +17,32 @@ p = helmholtz(boundary = boundary)
 
 import time
 
+k=2
+mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
+bases = create_bases2(gq, lq, 15, silent = False)
+
 A = []
 B = []
 C = []
-K = np.arange(0,5,.5)
+K = np.arange(0,2,1)
 for k in K:
 	print k
-	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
-	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
-	bases = create_bases2(gq, lq, 15, silent = False)
+	#mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+	#gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
+	#bases = create_bases2(gq, lq, 15, silent = False)
 	t = time.time()
-	a = calculate_inf_sup_constant(gq, lq, bases)
+	a = calculate_inf_sup_constant(gq, lq, bases, k)
 	print time.time()-t, a
-	t = time.time()
-	b = calculate_inf_sup_constant2(gq, lq)
-	print time.time()-t, b
-	t = time.time()
-	c = calculate_continuity_constant(gq, lq)
-	print time.time()-t, c
+	#t = time.time()
+	#b = calculate_inf_sup_constant2(gq, lq)
+	#print time.time()-t, b
+	#t = time.time()
+	#c = calculate_continuity_constant(gq, lq)
+	#print time.time()-t, c
 	A.append(a)
-	B.append(b)
-	C.append(c)
+	#B.append(b)
+	#C.append(c)
 
 from matplotlib import pyplot as plt
 plt.figure()
@@ -65,6 +70,93 @@ plt.show()
 
 
 
+
+
+
+
+
+
+
+#op = gq["op"]
+mus = {'k': k, 'c_glob': 6., 'c_loc': 6.}
+op = gq["d"].operator.assemble(mus)
+rhs = gq["rhs"]
+spaces = gq["spaces"]
+localizer = gq["localizer"]
+operator_reductor = LRBOperatorProjection(op, rhs, localizer, spaces, bases, spaces, bases)
+A = operator_reductor.get_reduced_operator()._matrix
+
+H10 = gq["h1_0_prod"]
+operator_reductor0 = LRBOperatorProjection(H10, rhs, localizer, spaces, bases, spaces, bases)
+Y = operator_reductor0.get_reduced_operator()._matrix
+H1 = gq["h1_prod"]
+operator_reductor = LRBOperatorProjection(H1, rhs, localizer, spaces, bases, spaces, bases)
+X = operator_reductor.get_reduced_operator()._matrix
+
+t = time.time()
+Xinv = sp.inv(X)
+print time.time() -t
+t = time.time()
+Yinv = sp.inv(Y)
+print time.time() -t
+t = time.time()
+M = Xinv.dot(A.H).dot(Yinv).dot(A).todense()
+print time.time() -t
+t =time.time()
+eigvals = np.linalg.eigvals(M)
+print time.time() -t
+eigvals = np.sqrt(np.abs(eigvals))
+eigvals.sort()
+result = eigvals[0]
+
+
+
+t = time.time()
+M = A.H.dot(Yinv).dot(A).todense()
+print time.time() -t
+
+
+
+
+
+
+
+
+A = gq["op"]._matrix
+H1 = gq["h1_prod"]._matrix
+H1_0 = gq["h1_0_prod"]._matrix
+Y = H1_0
+X = H1
+
+
+t =time.time()
+Yinv = sp.inv(X)
+print time.time() -t
+t =time.time()
+M = A.H.dot(Yinv).dot(A)
+print time.time() -t
+t =time.time()
+eigvals = sp.eigs(M, M=X, which = 'SM', tol = 1e-2)[0]
+print time.time() -t
+eigvals = np.sqrt(np.abs(eigvals))
+eigvals.sort()
+result = eigvals[0]
+
+
+
+
+
+
+from scipy.sparse.linalg import LinearOperator
+t = time.time()
+Xinv = sp.factorized(X)
+print time.time()-t
+def mv(v):
+	return A.H.dot(Xinv(A.dot(v)))
+M1 = LinearOperator(A.shape, matvec = mv)
+t =time.time()
+eigvals = sp.eigs(M1, M=X, which = 'SM', tol = 1e-2)
+print time.time() -t
 
 
 A = gq["op"]._matrix

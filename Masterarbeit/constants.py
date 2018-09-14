@@ -77,8 +77,10 @@ def calculate_Psi_norm_r(gq,lq):
 		print "calculated Psi_norm: ", maxval
 	print "calculated all Psi_norms"
 
-def calculate_inf_sup_constant(gq,lq, bases):
-	op = gq["op"]
+def calculate_inf_sup_constant(gq,lq, bases, k):
+	#op = gq["op"]
+	mus = {'k': k, 'c_glob': 6., 'c_loc': 6.}
+	op = gq["d"].operator.assemble(mus)
 	rhs = gq["rhs"]
 	spaces = gq["spaces"]
 	localizer = gq["localizer"]
@@ -92,7 +94,7 @@ def calculate_inf_sup_constant(gq,lq, bases):
 	operator_reductor = LRBOperatorProjection(H1, rhs, localizer, spaces, bases, spaces, bases)
 	X = operator_reductor.get_reduced_operator()._matrix
 
-	M = sp.inv(X).dot(A.T).dot(sp.inv(Y)).dot(A).todense()
+	M = sp.inv(X).dot(A.H).dot(sp.inv(Y)).dot(A).todense()
 	eigvals = np.linalg.eigvals(M)
 	eigvals = np.sqrt(np.abs(eigvals))
 	eigvals.sort()
@@ -107,7 +109,7 @@ def calculate_inf_sup_constant2(gq,lq):
 	Y = H1_0
 	X = H1
 
-	M = A.T.dot(sp.inv(Y)).dot(A)
+	M = A.H.dot(sp.inv(Y)).dot(A)
 	eigvals = sp.eigs(M, M=X, which = 'SM', tol = 1e-2)[0]
 	eigvals = np.sqrt(np.abs(eigvals))
 	eigvals.sort()
@@ -123,7 +125,7 @@ def calculate_continuity_constant(gq, lq):
 	X = H1
 
 	Yinv = sp.inv(Y)
-	M = A.T.dot(Yinv).dot(A)
+	M = A.H.dot(Yinv).dot(A)
 	eigvals = sp.eigs(M, M=X, k=1)[0]
 	eigvals = np.sqrt(np.abs(eigvals))
 	eigvals[::-1].sort()
