@@ -8,7 +8,7 @@ from generate_solution import *
 
 set_log_levels(levels={'pymor': 'WARN'})
 
-boundary = 'dirichlet'
+boundary = 'neumann'
 cglob= 6
 cloc=6.
 resolution = 50
@@ -17,32 +17,32 @@ p = helmholtz(boundary = boundary)
 
 import time
 
-k=2
-mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
-gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
-bases = create_bases2(gq, lq, 15, silent = False)
-
 A = []
 B = []
 C = []
-K = np.arange(0,2,1)
+#D = []
+K = np.arange(0,10,.1)
 for k in K:
 	print k
-	#mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
-	#gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
-	#bases = create_bases2(gq, lq, 15, silent = False)
+	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
+	bases = create_bases2(gq, lq, 15, silent = False)
 	t = time.time()
-	a = calculate_inf_sup_constant(gq, lq, bases, k)
+	a = calculate_inf_sup_constant(gq, lq, bases)
 	print time.time()-t, a
+	t = time.time()
+	b = calculate_inf_sup_constant2(gq, lq)
+	print time.time()-t, b
+	t = time.time()
+	c = calculate_continuity_constant(gq, lq)
+	print time.time()-t, c
 	#t = time.time()
-	#b = calculate_inf_sup_constant2(gq, lq)
-	#print time.time()-t, b
-	#t = time.time()
-	#c = calculate_continuity_constant(gq, lq)
-	#print time.time()-t, c
+	#d = calculate_continuity_constant2(gq, lq, bases)
+	#print time.time()-t, d
 	A.append(a)
-	#B.append(b)
-	#C.append(c)
+	B.append(b)
+	C.append(c)
+	#D.append(d)
 
 from matplotlib import pyplot as plt
 plt.figure()
@@ -62,6 +62,247 @@ plt.plot(K, C, label = "continuity-constant")
 plt.xlabel('k')
 plt.legend(loc='upper right')
 plt.show()
+
+"""
+plt.figure()
+plt.plot(K, D, label = "continuity-constant2")
+plt.xlabel('k')
+plt.legend(loc='upper right')
+plt.show()
+"""
+
+
+
+
+
+from matplotlib import pyplot as plt
+plt.figure()
+plt.plot(K, A, label = "inf-sup-constant")
+plt.plot(K, B, label = "inf-sup-constant2")
+plt.xlabel('k')
+plt.legend(loc='upper right')
+plt.show()
+
+
+
+
+
+
+
+
+
+
+from problems import *
+import numpy as np
+import sys
+from pymor.basic import *
+from localize_problem import *
+from constants import *
+from generate_solution import *
+
+set_log_levels(levels={'pymor': 'WARN'})
+
+boundary = 'neumann'
+cglob= 6
+cloc=6.
+resolution = 50
+coarse_grid_resolution = 10
+p = helmholtz(boundary = boundary)
+
+k=0
+mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
+bases = create_bases2(gq, lq, 15, silent = False)
+
+import time
+
+A = []
+K = np.arange(0,10,.1)
+for k in K:
+	print k
+	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+	#gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
+	t = time.time()
+	#a = calculate_inf_sup_constant(gq, lq, bases, mus)
+	#a = calculate_inf_sup_constant2(gq, lq, mus)
+	a = calculate_continuity_constant(gq, lq, mus)
+	print time.time()-t, a
+	A.append(a)
+
+from matplotlib import pyplot as plt
+plt.figure()
+plt.plot(K, A, label = "inf-sup-constant")
+plt.xlabel('k')
+plt.legend(loc='upper right')
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+from problems import *
+import numpy as np
+import sys
+from pymor.basic import *
+from localize_problem import *
+from constants import *
+from generate_solution import *
+
+set_log_levels(levels={'pymor': 'WARN'})
+
+boundary = 'dirichlet'
+cglob= 6
+cloc=6.
+resolution = 50
+coarse_grid_resolution = 10
+p = helmholtz(boundary = boundary)
+
+k=6
+mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
+
+import time
+
+A = []
+N = np.arange(0,10,1)
+for n in N:
+	print n
+	bases = create_bases2(gq, lq, n, silent = False)
+	t = time.time()
+	a = calculate_inf_sup_constant(gq, lq, bases)
+	print time.time()-t, a
+	A.append(a)
+
+from matplotlib import pyplot as plt
+plt.figure()
+plt.plot(N, A, label = "inf-sup-constant")
+plt.xlabel('n')
+plt.legend(loc='upper right')
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+isc2: 1
+
+
+
+
+
+k=1
+mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+A1 = gq["d"].operator.assemble(mus)._matrix.todense()
+k=6
+mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+A2 = gq["d"].operator.assemble(mus)._matrix.todense()
+
+
+
+
+from problems import *
+import numpy as np
+import sys
+from pymor.basic import *
+from localize_problem import *
+from constants import *
+from generate_solution import *
+
+set_log_levels(levels={'pymor': 'WARN'})
+
+boundary = 'dirichlet'
+cglob= 6
+cloc=6.
+resolution = 50
+coarse_grid_resolution = 10
+p = helmholtz(boundary = boundary)
+
+k=6
+mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
+
+A = gq["op"]._matrix
+H1 = gq["h1_prod"]._matrix
+H1_0 = gq["h1_0_prod"]._matrix
+Y = H1_0
+X = H1
+
+Yinv = sp.factorized(Y)
+def mv(v):
+	return A.H.dot(Yinv(A.dot(v)))
+M1 = LinearOperator(A.shape, matvec = mv)
+print "trying"
+eigs = sp.eigs(M1, M=X, k=1, tol = 1e-4)
+gq["d"].visualize(NumpyVectorArray(eigs[1].real.T))
+eigvals = eigs[0]
+eigvals = np.sqrt(np.abs(eigvals))
+eigvals.sort()
+eigvals
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

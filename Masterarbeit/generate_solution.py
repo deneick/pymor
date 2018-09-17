@@ -14,6 +14,8 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 			print "calculating constants"
 		#calculate_lambda_min(gq, lq)
 		#calculate_Psi_norm(gq,lq)
+		#calculate_continuity_constant(gq, lq)
+		#calculate_inf_sup_constant2(gq, lq)
 	if not silent:
 		print "creating bases"
 	bases = {}
@@ -103,14 +105,14 @@ def reconstruct_solution(gq, lq, bases, silent = True):
 
 def operator_svd(Top, source_inner, range_inner):
     sfac = scipy.sparse.linalg.factorized(source_inner)
-    Tadj = sfac(Top.T.dot(range_inner.todense()))
+    Tadj = sfac(Top.H.dot(range_inner.todense()))
     blockmat = [[None, Tadj], [Top, None]]
     fullblockmat = scipy.sparse.bmat(blockmat).tocsc()
     w,v = np.linalg.eig(fullblockmat.todense())
     return np.abs(w[::2]), v[:source_inner.shape[0],::2], v[source_inner.shape[0]:, ::2]
 
 def operator_svd2(Top, source_inner, range_inner):
-    mat_left = Top.conj().T.dot(range_inner.dot(Top))
+    mat_left = Top.H.dot(range_inner.dot(Top))
     mat_right = source_inner
     eigvals = scipy.linalg.eigvals(mat_left, mat_right)
     eigvals = np.sqrt(np.abs(eigvals))

@@ -69,8 +69,23 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 	
 	global_operator = d.operator.assemble(mus)
 	global_quantities["op"] = global_operator
+	global_quantities["op_not_assembled"] = d.operator
 	global_rhs = d.rhs.assemble(mus)
 	global_quantities["rhs"] = global_rhs
+
+	op_fixed = copy.deepcopy(d.operator) #doesnt work
+
+	try:
+		dirichlet_dofs = data['boundary_info'].dirichlet_boundaries(2)
+		for op in op_fixed.operators:
+			op.assemble(mus)._matrix[dirichlet_dofs, dirichlet_dofs] *= 1e5
+		#d.rhs.assemble(mus)._matrix[:, dirichlet_dofs] *= 1e5
+	except KeyError:
+		pass
+
+	global_operator_fixed = op_fixed.assemble(mus)
+	global_quantities["op_fixed"] = global_operator_fixed
+	global_quantities["op_fixed_not_assembled"] = op_fixed
 
 	global_quantities["p"] = p
 	
@@ -178,7 +193,7 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 					Q_r.T[i] = qi._array
 				ldict["solution_matrix_robin"] = Q_r
 				omstarh1 = ld.products["h1"].assemble()._matrix[:,lvecext][lvecext,:]
-				source_Q_r_product = NumpyMatrixOperator(Q_r.conj().T.dot(omstarh1.dot(Q_r)))
+				source_Q_r_product = NumpyMatrixOperator(Q_r.T.conj().dot(omstarh1.dot(Q_r)))
 				ldict["source_product"] = source_Q_r_product
 
 			#products

@@ -103,7 +103,7 @@ def ungleichung(it, k, boundary, save, nrang  = np.arange(0,100,5), cglob = 0, c
 				M_sparse = scipy.sparse.csr_matrix(M)
 				T = ldict["transfer_matrix_robin"]
 				B = basis._array.T
-				T1 = T - B.dot(B.conj().T).dot(M_sparse.dot(T))
+				T1 = T - B.dot(B.H).dot(M_sparse.dot(T))
 				maxval = operator_svd2(T1, S, M_sparse)[0][0]
 				rssum2 += maxval**2
 			ru = reconstruct_solution(gq,lq,bases)
@@ -134,6 +134,8 @@ def accuracy(it, num_testvecs, k, boundary, save, cglob = 0, cloc = 0, plot = Fa
 	u = d.solve(mus)
 	ERR = []
 	calculate_lambda_min(gq, lq)
+	calculate_continuity_constant(gq, lq)
+	calculate_inf_sup_constant2(gq, lq)
 	for target_accuracy in logspace:
 		print target_accuracy
 		for i in range(it):
@@ -159,6 +161,43 @@ def accuracy(it, num_testvecs, k, boundary, save, cglob = 0, cloc = 0, plot = Fa
 		plt.legend(loc='upper right')
 		plt.xlabel('target_accuracy')
 		plt.gca().invert_xaxis()
+		plt.show()
+
+def accuracyk(it, num_testvecs, acc, boundary, save, cglob = 0, cloc = 0, plot = False, resolution = 200, coarse_grid_resolution = 10):
+	#tol/err
+	p = helmholtz(boundary = boundary)
+	kspace = np.arange(0.2,10,.1)
+	ERR = []
+	for k in kspace:
+		print k
+		for i in range(it):
+			print i,
+			sys.stdout.flush()
+			err = []
+			mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+			gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calQ = True)
+			d = gq["d"]
+			u = d.solve(mus)
+			calculate_lambda_min(gq, lq)
+			calculate_continuity_constant(gq, lq)
+			calculate_inf_sup_constant2(gq, lq)
+			bases = create_bases(gq, lq, num_testvecs, transfer = 'robin', target_accuracy = acc)
+			ru = reconstruct_solution(gq, lq, bases)
+			err.append(d.h1_norm(u-ru)[0]/d.h1_norm(u)[0])
+		ERR.append(err)
+	means = np.mean(ERR, axis = 1)
+	data1 = np.vstack([kspace, means]).T
+	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data1])
+	"""limits = [0, 25, 50, 75, 100]
+	percentiles = np.array(np.percentile(ERR, limits, axis=1))
+	data2 = np.vstack([logspace, percentiles]).T
+	open("dats/percentiles_accuracy.dat", "w").writelines([" ".join(map(str, v)) + "\n" for v in data2])"""
+	if plot:
+		from matplotlib import pyplot as plt
+		plt.figure()
+		plt.semilogy(kspace, means, label = "err")
+		plt.legend(loc='upper right')
+		plt.xlabel('k')
 		plt.show()
 
 def test(transfer = 'robin',boundary = 'dirichlet', n=15,k=6.,cglob= 6, cloc=6., title = 'test', resolution = 200, coarse_grid_resolution = 10):
