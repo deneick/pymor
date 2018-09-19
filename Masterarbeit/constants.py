@@ -94,7 +94,7 @@ def calculate_inf_sup_constant(gq,lq, bases):#, mus):
 	operator_reductor = LRBOperatorProjection(H1, rhs, localizer, spaces, bases, spaces, bases)
 	X = operator_reductor.get_reduced_operator()._matrix
 
-	Yinv = sp.factorized(Y)
+	Yinv = sp.factorized(Y.astype(complex))
 	def mv(v):
 		return A.H.dot(Yinv(A.dot(v)))
 	M1 = LinearOperator(A.shape, matvec = mv)
@@ -116,7 +116,7 @@ def calculate_inf_sup_constant2(gq,lq):#, mus):
 	Y = H1_0
 	X = H1
 
-	Yinv = sp.factorized(Y)
+	Yinv = sp.factorized(Y.astype(complex))
 	def mv(v):
 		return A.H.dot(Yinv(A.dot(v)))
 	M1 = LinearOperator(A.shape, matvec = mv)
@@ -139,7 +139,7 @@ def calculate_continuity_constant(gq, lq):#, mus):
 	Y = H1_0
 	X = H1
 
-	Yinv = sp.factorized(Y)
+	Yinv = sp.factorized(Y.astype(complex))
 	def mv(v):
 		return A.H.dot(Yinv(A.dot(v)))
 	M1 = LinearOperator(A.shape, matvec = mv)
@@ -173,7 +173,7 @@ def calculate_continuity_constant2(gq, lq, bases):#, mus):
 	operator_reductor = LRBOperatorProjection(H1, rhs, localizer, spaces, bases, spaces, bases)
 	X = operator_reductor.get_reduced_operator()._matrix
 
-	Yinv = sp.factorized(Y)
+	Yinv = sp.factorized(Y.astype(complex))
 	def mv(v):
 		return A.H.dot(Yinv(A.dot(v)))
 	M1 = LinearOperator(A.shape, matvec = mv)

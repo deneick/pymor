@@ -24,6 +24,11 @@ from pymor.basic import *
 from localize_problem import *
 from constants import *
 from generate_solution import *
+import time
+
+if not os.path.exists("dats"):
+	os.makedirs("dats")
+set_log_levels(levels={'pymor': 'WARN'})
 
 def evaluation(it, lim, k, boundary, save, cglob = 0, cloc = 0, plot = False, resolution = 200, coarse_grid_resolution = 10):
 	#import time
@@ -143,7 +148,7 @@ def accuracy(it, num_testvecs, k, boundary, save, cglob = 0, cloc = 0, plot = Fa
 			sys.stdout.flush()
 			err = []
 			#import ipdb; ipdb.set_trace()
-			bases = create_bases(gq, lq, num_testvecs, transfer = 'robin', target_accuracy = target_accuracy)
+			bases = create_bases(gq, lq, num_testvecs, transfer = 'robin', target_accuracy = target_accuracy, calC = False)
 			ru = reconstruct_solution(gq, lq, bases)
 			err.append(d.h1_norm(u-ru)[0]/d.h1_norm(u)[0])
 		ERR.append(err)
@@ -163,7 +168,7 @@ def accuracy(it, num_testvecs, k, boundary, save, cglob = 0, cloc = 0, plot = Fa
 		plt.gca().invert_xaxis()
 		plt.show()
 
-def accuracyk(it, num_testvecs, acc, boundary, save, cglob = 0, cloc = 0, plot = False, resolution = 200, coarse_grid_resolution = 10):
+def accuracyk(it, num_testvecs, acc, boundary, save, cloc0 = 0, cloc1 = 1, cloc2 = 1, plot = False, resolution = 50, coarse_grid_resolution = 10):
 	#tol/err
 	p = helmholtz(boundary = boundary)
 	kspace = np.arange(0.2,10,.1)
@@ -174,14 +179,12 @@ def accuracyk(it, num_testvecs, acc, boundary, save, cglob = 0, cloc = 0, plot =
 			print i,
 			sys.stdout.flush()
 			err = []
-			mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+			cloc = cloc0+ cloc1*k+cloc2*k**2
+			mus = {'k': k, 'c_glob': -1j*k, 'c_loc': cloc}
 			gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calQ = True)
 			d = gq["d"]
 			u = d.solve(mus)
-			calculate_lambda_min(gq, lq)
-			calculate_continuity_constant(gq, lq)
-			calculate_inf_sup_constant2(gq, lq)
-			bases = create_bases(gq, lq, num_testvecs, transfer = 'robin', target_accuracy = acc)
+			bases = create_bases(gq, lq, num_testvecs, transfer = 'robin', target_accuracy = acc, calC = True)
 			ru = reconstruct_solution(gq, lq, bases)
 			err.append(d.h1_norm(u-ru)[0]/d.h1_norm(u)[0])
 		ERR.append(err)
@@ -198,6 +201,50 @@ def accuracyk(it, num_testvecs, acc, boundary, save, cglob = 0, cloc = 0, plot =
 		plt.semilogy(kspace, means, label = "err")
 		plt.legend(loc='upper right')
 		plt.xlabel('k')
+		plt.show()
+
+def plotconstants(boundary, save, cloc0 = 0, cloc1 = 1, cloc2 = 1, resolution = 50, coarse_grid_resolution = 10, plot = False):
+	p = helmholtz(boundary = boundary)
+	kspace = np.arange(0.1,10,.1)
+	#A = []
+	B = []
+	C = []
+	#D = []
+	for k in kspace:
+		print k
+		cloc = cloc0+ cloc1*k+cloc2*k**2
+		mus = {'k': k, 'c_glob': -1j*k, 'c_loc': cloc}
+		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
+		#bases = create_bases2(gq, lq, 15, silent = False)
+		#t = time.time()
+		#a = calculate_inf_sup_constant(gq, lq, bases)
+		#print time.time()-t, a
+		t = time.time()
+		b = calculate_inf_sup_constant2(gq, lq)
+		print time.time()-t, b
+		t = time.time()
+		c = calculate_continuity_constant(gq, lq)
+		print time.time()-t, c
+		#t = time.time()
+		#d = calculate_continuity_constant2(gq, lq, bases)
+		#print time.time()-t, d
+		#A.append(a)
+		B.append(b)
+		C.append(c)
+		#D.append(d)
+	data = np.vstack([kspace, B, C]).T
+	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
+	if plot:	
+		plt.figure()
+		plt.plot(K, B, label = "inf-sup-constant2")
+		plt.xlabel('k')
+		plt.legend(loc='upper right')
+		plt.show()
+
+		plt.figure()
+		plt.plot(K, C, label = "continuity-constant")
+		plt.xlabel('k')
+		plt.legend(loc='upper right')
 		plt.show()
 
 def test(transfer = 'robin',boundary = 'dirichlet', n=15,k=6.,cglob= 6, cloc=6., title = 'test', resolution = 200, coarse_grid_resolution = 10):

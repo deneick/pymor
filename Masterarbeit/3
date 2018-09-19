@@ -1,5 +1,74 @@
 from problems import *
 import numpy as np
+from pymor.basic import *
+from localize_problem import *
+from constants import *
+from generate_solution import *
+
+set_log_levels(levels={'pymor': 'WARN'})
+
+num_testvecs= 20
+boundary= 'neumann'
+save = 'test3.dat'
+cglob = 0
+cloc = 0
+k=2
+plot = True
+resolution = 50
+coarse_grid_resolution = 10
+p = helmholtz(boundary = boundary)
+space = np.logspace(-15,0,10)
+err = []
+for prob in space:
+	print prob
+	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calQ = True)
+	d = gq["d"]
+	u = d.solve(mus)
+	bases = create_bases(gq, lq, num_testvecs, transfer = 'robin', target_accuracy = 1e-2, max_failure_probability = prob, calC = True)
+	ru = reconstruct_solution(gq, lq, bases)
+	err.append(d.h1_norm(u-ru)[0]/d.h1_norm(u)[0])
+from matplotlib import pyplot as plt
+plt.figure()
+plt.loglog(space, err, label = "err")
+plt.legend(loc='upper right')
+plt.xlabel('prob')
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+from problems import *
+import numpy as np
 import sys
 from pymor.basic import *
 from localize_problem import *

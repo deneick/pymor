@@ -7,15 +7,15 @@ import numpy as np
 import scipy
 from constants import *
 
-def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None, target_accuracy = 1e-3, silent = True):
+def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None, target_accuracy = 1e-3, max_failure_probability = 1e-15, silent = True, calC = True):
 	#adaptive Basiserstellung
-	if testlimit is None:
+	if calC:
 		if not silent:
 			print "calculating constants"
-		#calculate_lambda_min(gq, lq)
+		calculate_lambda_min(gq, lq)
 		#calculate_Psi_norm(gq,lq)
-		#calculate_continuity_constant(gq, lq)
-		#calculate_inf_sup_constant2(gq, lq)
+		calculate_continuity_constant(gq, lq)
+		calculate_inf_sup_constant2(gq, lq)
 	if not silent:
 		print "creating bases"
 	bases = {}
@@ -35,7 +35,7 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 			transop = ldict["robin_transfer"]
 
 		if testlimit is None:		
-			testlimit = calculate_testlimit(gq, lq, space, num_testvecs, target_accuracy)	
+			testlimit = calculate_testlimit(gq, lq, space, num_testvecs, target_accuracy, max_failure_probability)	
 	
 		testvecs = transop.apply(NumpyVectorArray(np.random.normal(size=transop.source.dim)))
 		for i in range(num_testvecs-1):
