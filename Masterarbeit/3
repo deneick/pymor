@@ -274,11 +274,41 @@ plt.show()
 
 
 
+###
+from problems import *
+import numpy as np
+import sys
+from pymor.basic import *
+from localize_problem import *
+from constants import *
+from generate_solution import *
+
+set_log_levels(levels={'pymor': 'WARN'})
+
+boundary = 'dirichlet'
+cglob= 6
+cloc=6.
+resolution = 50
+coarse_grid_resolution = 10
+p = helmholtz(boundary = boundary)
+
+k=6
+mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
+bases = create_bases2(gq, lq, 10, silent = False)
+A =[]
+for space in gq["spaces"]:
+	bases[space] = bases[space].empty()
+	a = calculate_inf_sup_constant(gq, lq, bases)
+	A.append(a)
 
 
-
-
-
+from matplotlib import pyplot as plt
+plt.figure()
+plt.plot(A, label = "inf-sup-constant")
+plt.xlabel('n')
+plt.legend(loc='upper right')
+plt.show()
 
 
 

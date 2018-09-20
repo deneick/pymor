@@ -129,7 +129,7 @@ def ungleichung(it, k, boundary, save, nrang  = np.arange(0,100,5), cglob = 0, c
 		plt.xlabel('Basis size')
 		plt.show()
 
-def accuracy(it, num_testvecs, k, boundary, save, cglob = 0, cloc = 0, plot = False, resolution = 200, coarse_grid_resolution = 10):
+def accuracy(it, num_testvecs, k, boundary, save, cglob = 0, cloc = 0, plot = False, resolution = 50, coarse_grid_resolution = 10):
 	#tol/err
 	p = helmholtz(boundary = boundary)
 	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
