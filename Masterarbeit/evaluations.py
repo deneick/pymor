@@ -83,10 +83,11 @@ def ungleichung(it, k, boundary, save, nrang  = np.arange(0,100,5), cglob = 0, c
 	p = helmholtz(boundary = boundary)
 	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calT = True, calQ = True)
+	calculate_continuity_constant(gq, lq)
+	calculate_inf_sup_constant2(gq, lq)
 	d = gq["d"]
 	u = d.solve(mus)	
 	LS = []
-	RS = []
 	RS2 = []
 	for n in nrang:
 		print n
@@ -95,10 +96,8 @@ def ungleichung(it, k, boundary, save, nrang  = np.arange(0,100,5), cglob = 0, c
 			sys.stdout.flush()
 			#print time.localtime(time.time()).tm_hour , " : ", time.localtime(time.time()).tm_min , " : ", time.localtime(time.time()).tm_sec
 			ls = []
-			rs = []
 			rs2 = []
 			bases = create_bases2(gq,lq,n,transfer = 'robin')
-			rssum = 0
 			rssum2 = 0
 			for space in gq["spaces"]:
 				ldict = lq[space]
@@ -113,7 +112,7 @@ def ungleichung(it, k, boundary, save, nrang  = np.arange(0,100,5), cglob = 0, c
 				rssum2 += maxval**2
 			ru = reconstruct_solution(gq,lq,bases)
 			ls.append(d.h1_norm(u-ru)[0]/d.h1_norm(u)[0])
-			rs2.append(4*np.sqrt(rssum2))
+			rs2.append((gq["continuity_constant"]/gq["inf_sup_constant"])*4*np.sqrt(rssum2))
 		LS.append(ls)
 		RS2.append(rs2)
 	means_ls = np.mean(LS, axis = 1)
@@ -129,7 +128,59 @@ def ungleichung(it, k, boundary, save, nrang  = np.arange(0,100,5), cglob = 0, c
 		plt.xlabel('Basis size')
 		plt.show()
 
-def accuracy(it, num_testvecs, k, boundary, save, cglob = 0, cloc = 0, plot = False, resolution = 50, coarse_grid_resolution = 10):
+def ungleichungk(it, n, boundary, save, krang  = np.arange(0.1,50.1,0.2), cloc0 = 0, cloc1 = 1, cloc2 = 1, plot=False, resolution = 100, coarse_grid_resolution = 10):
+	#import time
+	p = helmholtz(boundary = boundary)	
+	LS = []
+	RS2 = []
+	for k in krang:
+		print k
+		cglob = -1j*k
+		cloc = cloc0+ cloc1*k+cloc2*k**2
+		mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calT = True, calQ = True)
+		calculate_continuity_constant(gq, lq)
+		calculate_inf_sup_constant2(gq, lq)		
+		d = gq["d"]
+		u = d.solve(mus)
+		for j in range(min(20-n/5,it)):
+			print j,
+			sys.stdout.flush()
+			#print time.localtime(time.time()).tm_hour , " : ", time.localtime(time.time()).tm_min , " : ", time.localtime(time.time()).tm_sec
+			ls = []
+			rs2 = []
+			bases = create_bases2(gq,lq,n,transfer = 'robin')
+			rssum2 = 0
+			for space in gq["spaces"]:
+				ldict = lq[space]
+				basis = bases[space]
+				M = ldict["range_product"]._matrix
+				S = ldict["source_product"]._matrix
+				M_sparse = scipy.sparse.csr_matrix(M)
+				T = ldict["transfer_matrix_robin"]
+				B = basis._array.T
+				T1 = T - B.dot(B.H).dot(M_sparse.dot(T))
+				maxval = operator_svd2(T1, S, M_sparse)[0][0]
+				rssum2 += maxval**2
+			ru = reconstruct_solution(gq,lq,bases)
+			ls.append(d.h1_norm(u-ru)[0]/d.h1_norm(u)[0])
+			rs2.append((gq["continuity_constant"]/gq["inf_sup_constant"])*4*np.sqrt(rssum2))
+		LS.append(ls)
+		RS2.append(rs2)
+	means_ls = np.mean(LS, axis = 1)
+	means_rs2 = np.mean(RS2, axis = 1)
+	data = np.vstack([nrang, means_ls, means_rs2]).T
+	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
+	if plot:	
+		from matplotlib import pyplot as plt
+		plt.figure()
+		plt.semilogy(nrang, means_ls, label = "ls")
+		plt.semilogy(nrang, means_rs2, label = "rs2")
+		plt.legend(loc='upper right')
+		plt.xlabel('Basis size')
+		plt.show()
+
+def accuracy(it, num_testvecs, k, boundary, save, cglob = 0, cloc = 0, plot = False, resolution = 100, coarse_grid_resolution = 10):
 	#tol/err
 	p = helmholtz(boundary = boundary)
 	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
@@ -168,10 +219,10 @@ def accuracy(it, num_testvecs, k, boundary, save, cglob = 0, cloc = 0, plot = Fa
 		plt.gca().invert_xaxis()
 		plt.show()
 
-def accuracyk(it, num_testvecs, acc, boundary, save, cloc0 = 0, cloc1 = 1, cloc2 = 1, plot = False, resolution = 50, coarse_grid_resolution = 10):
+def accuracyk(it, num_testvecs, acc, boundary, save, cloc0 = 0, cloc1 = 1, cloc2 = 1, plot = False, resolution = 100, coarse_grid_resolution = 10):
 	#tol/err
 	p = helmholtz(boundary = boundary)
-	kspace = np.arange(0.2,10,.1)
+	kspace = np.arange(0.1,10,.1)
 	ERR = []
 	for k in kspace:
 		print k
