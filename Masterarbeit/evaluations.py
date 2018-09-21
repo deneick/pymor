@@ -231,11 +231,14 @@ def accuracyk(it, num_testvecs, acc, boundary, save, cloc0 = 0, cloc1 = 1, cloc2
 		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calQ = True)
 		d = gq["d"]
 		u = d.solve(mus)
+		calculate_lambda_min(gq, lq)
+		calculate_continuity_constant(gq, lq)
+		calculate_inf_sup_constant2(gq, lq)
 		for i in range(it):
 			print i,
 			sys.stdout.flush()
 			err = []
-			bases = create_bases(gq, lq, num_testvecs, transfer = 'robin', target_accuracy = acc, calC = True)
+			bases = create_bases(gq, lq, num_testvecs, transfer = 'robin', target_accuracy = acc, calC = False)
 			ru = reconstruct_solution(gq, lq, bases)
 			err.append(d.h1_norm(u-ru)[0]/d.h1_norm(u)[0])
 		ERR.append(err)
