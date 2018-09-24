@@ -107,7 +107,7 @@ def ungleichung(it, k, boundary, save, nrang  = np.arange(0,100,5), cglob = 0, c
 				M_sparse = scipy.sparse.csr_matrix(M)
 				T = ldict["transfer_matrix_robin"]
 				B = basis._array.T
-				T1 = T - B.dot(B.H).dot(M_sparse.dot(T))
+				T1 = T - B.dot(B.conj().T).dot(M_sparse.dot(T))
 				maxval = operator_svd2(T1, S, M_sparse)[0][0]
 				rssum2 += maxval**2
 			ru = reconstruct_solution(gq,lq,bases)
@@ -159,7 +159,7 @@ def ungleichungk(it, n, boundary, save, krang  = np.arange(0.1,50.1,0.2), cloc0 
 				M_sparse = scipy.sparse.csr_matrix(M)
 				T = ldict["transfer_matrix_robin"]
 				B = basis._array.T
-				T1 = T - B.dot(B.H).dot(M_sparse.dot(T))
+				T1 = T - B.dot(B.conj().T).dot(M_sparse.dot(T))
 				maxval = operator_svd2(T1, S, M_sparse)[0][0]
 				rssum2 += maxval**2
 			ru = reconstruct_solution(gq,lq,bases)
