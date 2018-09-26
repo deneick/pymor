@@ -398,9 +398,9 @@ from pymor.basic import *
 import numpy as np
 set_log_levels(levels={'pymor': 'WARN'})
 p = helmholtz(boundary = 'robin')
-resolution = 100
+resolution = 8
 d, data = discretize_elliptic_cg(p, diameter=1./resolution)
-k=50
+k=5
 cloc = -1j*k
 cglob = -1j*k
 mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
