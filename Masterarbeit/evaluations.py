@@ -169,13 +169,13 @@ def ungleichungk(it, n, boundary, save, krang  = np.arange(0.1,50.1,0.2), cloc0 
 		RS2.append(rs2)
 	means_ls = np.mean(LS, axis = 1)
 	means_rs2 = np.mean(RS2, axis = 1)
-	data = np.vstack([nrang, means_ls, means_rs2]).T
+	data = np.vstack([krang, means_ls, means_rs2]).T
 	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
 	if plot:	
 		from matplotlib import pyplot as plt
 		plt.figure()
-		plt.semilogy(nrang, means_ls, label = "ls")
-		plt.semilogy(nrang, means_rs2, label = "rs2")
+		plt.semilogy(krang, means_ls, label = "ls")
+		plt.semilogy(krang, means_rs2, label = "rs2")
 		plt.legend(loc='upper right')
 		plt.xlabel('Basis size')
 		plt.show()

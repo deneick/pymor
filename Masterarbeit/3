@@ -365,7 +365,7 @@ def mv(v):
 	return A.H.dot(Yinv(A.dot(v)))
 M1 = LinearOperator(A.shape, matvec = mv)
 print "trying"
-eigs = sp.eigs(M1, M=X, k=1, tol = 1e-4)
+eigs = sp.eigs(M1, M=X, k=100, tol = 1e-4)
 gq["d"].visualize(NumpyVectorArray(eigs[1].real.T))
 eigvals = eigs[0]
 eigvals = np.sqrt(np.abs(eigvals))
@@ -392,14 +392,30 @@ eigvals
 
 
 
+from pymor.discretizers.elliptic import discretize_elliptic_cg
+from problems import *
+from pymor.basic import *
+import numpy as np
+set_log_levels(levels={'pymor': 'WARN'})
+p = helmholtz(boundary = 'robin')
+resolution = 100
+d, data = discretize_elliptic_cg(p, diameter=1./resolution)
+k=50
+cloc = -1j*k
+cglob = -1j*k
+mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+u = d.solve(mus)
+d.visualize(u)
 
 
-
-
-
-
-
-
+U = u.empty()
+for k in np.arange(1,201,1):
+	print k
+	cloc = -1j*k
+	cglob = -1j*k
+	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+	U.append(d.solve(mus))
+d.visualize(U, rescale_colorbars = True)
 
 
 
