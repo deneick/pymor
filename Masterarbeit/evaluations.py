@@ -313,7 +313,7 @@ def test(transfer = 'robin',boundary = 'dirichlet', n=15,k=6.,cglob= 6, cloc=6.,
 	print d.h1_norm(dif)[0]/d.h1_norm(u)[0]
 	d.visualize((dif.real, dif.imag, u.real, u.imag, ru.real, ru.imag), legend = ('dif.real', 'dif.imag', 'u.real', 'u.imag', 'ru.real', 'ru.imag'), separate_colorbars = True, title = title)
 
-def kerr(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, rang = np.arange(0.1,50.1,.2), plot = False, resolution = 100, coarse_grid_resolution = 10):
+def kerr(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, rang = np.arange(0.1,50.1,.2), plot = False, resolution = 200, coarse_grid_resolution = 10):
 	#k/err
 	err_d =[]
 	err_r = []
@@ -358,6 +358,35 @@ def kerr(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, r
 		plt.semilogy(rang, means_d, label = "dirichlet")
 		plt.xlabel('k')
 		plt.legend(loc='upper right')
+		plt.show()
+
+def resolution(it, k, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, plot = False, resolution = 200, coarse_grid_resolution = 10):
+	cloc = cloc0+ cloc1*k+cloc2*k**2
+	cglob = -1j*k
+	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+	p = helmholtz(boundary = boundary)
+	space = np.arange(20,200,20)
+	err = []
+	for resolution in space:
+		print resolution
+		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus)
+		d = gq["d"]
+		u = d.solve(mus)
+		E = []
+		for i in range(it):
+			bases = create_bases2(gq, lq, n, transfer = 'robin')
+			ru = reconstruct_solution(gq, lq, bases)
+			E.append(d.h1_norm(u-ru)[0]/d.h1_norm(u)[0])
+		err.append(E)
+	errs = np.mean(err, axis = 1)
+	data = np.vstack([space, errs]).T
+	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
+	if plot:
+		from matplotlib import pyplot as plt
+		plt.figure()
+		plt.plot(space, errs, label = "err")
+		plt.legend(loc='upper right')
+		plt.xlabel('res')
 		plt.show()
 
 def cerr2D(it, n, k, boundary, save, cglob = 0, rang = np.arange(-10.,10.,1.), yrang = None, plot = False, resolution = 200, coarse_grid_resolution = 10):
