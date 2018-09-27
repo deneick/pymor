@@ -325,8 +325,8 @@ def kerr(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, r
 		cloc = cloc0+ cloc1*k+cloc2*k**2
 		print "k: ", k, "cloc: ", cloc
 		mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
-		resolution = int(30+1.6*k)
-		n = int(15 + 0.25*k)
+		#resolution = int(30+1.6*k)- int(30+1.6*k)% coarse_grid_resolution
+		#n = int(15 + 0.25*k)
 		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus)
 		d = gq["d"]
 		u = d.solve(mus)
