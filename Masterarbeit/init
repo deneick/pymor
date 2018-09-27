@@ -28,3 +28,5 @@ git stash save --keep-index
 git pull
 
 rm -r ~/pymor/Masterarbeit/dats/*
+
+

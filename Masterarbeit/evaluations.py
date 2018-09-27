@@ -360,12 +360,11 @@ def kerr(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, r
 		plt.legend(loc='upper right')
 		plt.show()
 
-def resolution(it, k, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, plot = False, resolution = 200, coarse_grid_resolution = 10):
-	cloc = cloc0+ cloc1*k+cloc2*k**2
+def resolution(it, k, n, boundary, save, cloc = 0, plot = False, coarse_grid_resolution = 10):
 	cglob = -1j*k
 	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 	p = helmholtz(boundary = boundary)
-	space = np.arange(20,200,20)
+	space = np.arange(20,210,10)
 	err = []
 	for resolution in space:
 		print resolution
