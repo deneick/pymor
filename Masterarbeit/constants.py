@@ -107,14 +107,23 @@ def calculate_inf_sup_constant(gq,lq, bases):#, mus):
 	print "calculated_inf_sup_constant: ", result
 	return result
 
-def calculate_inf_sup_constant2(gq,lq):#, mus):	
-	#op = gq["op_fixed_not_assembled"].assemble(mus)
-	op = gq["op_fixed"]
+def calculate_inf_sup_constant2(gq,lq):	
+	op = gq["op"]
 	A = op._matrix
 	H1 = gq["h1_prod"]._matrix
 	H1_0 = gq["h1_0_prod"]._matrix
 	Y = H1_0
 	X = H1
+
+	try:
+		a = gq["data"]['boundary_info'].dirichlet_boundaries(2)
+		b = np.arange(A.shape[0])
+		c = np.delete(b,a)
+		A = A[:,c][c,:]
+		X = X[:,c][c,:]
+		Y = Y[:,c][c,:]
+	except KeyError:
+		pass
 
 	Yinv = sp.factorized(Y.astype(complex))
 	def mv(v):
@@ -138,6 +147,16 @@ def calculate_continuity_constant(gq, lq):#, mus):
 	H1_0 = gq["h1_0_prod"]._matrix
 	Y = H1_0
 	X = H1
+	
+	try:
+		a = gq["data"]['boundary_info'].dirichlet_boundaries(2)
+		b = np.arange(A.shape[0])
+		c = np.delete(b,a)
+		A = A[:,c][c,:]
+		X = X[:,c][c,:]
+		Y = Y[:,c][c,:]
+	except KeyError:
+		pass
 
 	Yinv = sp.factorized(Y.astype(complex))
 	def mv(v):
@@ -159,6 +178,16 @@ def calculate_continuity_constant2(gq, lq, bases):#, mus):
 	H1_0 = gq["h1_0_prod"]._matrix
 	Y = H1_0
 	X = H1
+
+	try:
+		a = gq["data"]['boundary_info'].dirichlet_boundaries(2)
+		b = np.arange(A.shape[0])
+		c = np.delete(b,a)
+		A = A[:,c][c,:]
+		X = X[:,c][c,:]
+		Y = Y[:,c][c,:]
+	except KeyError:
+		pass
 
 	rhs = gq["rhs"]
 	spaces = gq["spaces"]
