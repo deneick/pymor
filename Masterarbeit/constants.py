@@ -112,7 +112,7 @@ def calculate_inf_sup_constant2(gq,lq):
 	A = op._matrix
 	H1 = gq["h1_prod"]._matrix
 	H1_0 = gq["h1_0_prod"]._matrix
-	Y = H1_0
+	Y = H1
 	X = H1
 
 	try:
@@ -145,7 +145,7 @@ def calculate_continuity_constant(gq, lq):#, mus):
 	#A = gq["d"].operator.assemble(mus)._matrix	
 	H1 = gq["h1_prod"]._matrix
 	H1_0 = gq["h1_0_prod"]._matrix
-	Y = H1_0
+	Y = H1
 	X = H1
 	
 	try:
@@ -176,7 +176,7 @@ def calculate_continuity_constant2(gq, lq, bases):#, mus):
 	#A = gq["d"].operator.assemble(mus)._matrix	
 	H1 = gq["h1_prod"]._matrix
 	H1_0 = gq["h1_0_prod"]._matrix
-	Y = H1_0
+	Y = H1
 	X = H1
 
 	try:
