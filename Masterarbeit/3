@@ -462,16 +462,16 @@ resolution = 50
 coarse_grid_resolution = 10
 p = helmholtz(boundary = boundary)
 
-k=2
+k=20
 mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
 
 A = gq["op"]._matrix
 H1 = gq["h1_prod"]._matrix
 H1_0 = gq["h1_0_prod"]._matrix
-Y = H1_0
+Y = H1
 X = H1
-"""
+
 a = gq["data"]['boundary_info'].dirichlet_boundaries(2)
 b = np.arange(A.shape[0])
 c = np.delete(b,a)
@@ -479,13 +479,13 @@ c = np.delete(b,a)
 A = A[:,c][c,:]
 X = X[:,c][c,:]
 Y = Y[:,c][c,:]
-"""
+
 Yinv = sp.factorized(Y)
 def mv(v):
 	return A.H.dot(Yinv(A.dot(v)))
 M1 = LinearOperator(A.shape, matvec = mv)
 print "trying"
-eigs = sp.eigs(M1, M=X, which = 'SM', tol = 1e-1, k=100)
+eigs = sp.eigs(M1, M=X, k=1, tol = 1e-4)
 e1 = np.zeros(H1.shape[0])
 e1[c] = eigs[1][:,0].real
 gq["d"].visualize(NumpyVectorArray(e1.T))
