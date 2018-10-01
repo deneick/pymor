@@ -364,7 +364,7 @@ def resolution(it, k, n, boundary, save, cloc = 0, plot = False, coarse_grid_res
 	cglob = -1j*k
 	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 	p = helmholtz(boundary = boundary)
-	space = np.arange(20,210,10)
+	space = np.arange(20,250,10)
 	err = []
 	for resolution in space:
 		print resolution

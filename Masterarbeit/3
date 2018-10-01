@@ -48,6 +48,55 @@ plt.show()
 
 
 
+from problems import *
+import numpy as np
+from pymor.basic import *
+from localize_problem import *
+from constants import *
+from generate_solution import *
+
+set_log_levels(levels={'pymor': 'WARN'})
+
+boundary= 'robin'
+cglob = -6j
+cloc = 1.-.5j
+k=6
+mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+resolution = 200
+p = helmholtz(boundary = boundary)
+space = [5, 8, 10, 20, 25, 40, 50]
+err = []
+for coarse_grid_resolution in space:
+	print coarse_grid_resolution
+	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus)
+	d = gq["d"]
+	u = d.solve(mus)
+	bases = create_bases2(gq, lq, 10, transfer = 'robin')
+	ru = reconstruct_solution(gq, lq, bases)
+	err.append(d.h1_norm(u-ru)[0]/d.h1_norm(u)[0])
+from matplotlib import pyplot as plt
+plt.figure()
+plt.semilogy(space, err, label = "err")
+plt.legend(loc='upper right')
+plt.xlabel('cgr')
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -225,7 +274,7 @@ from generate_solution import *
 
 set_log_levels(levels={'pymor': 'WARN'})
 
-boundary = 'neumann'
+boundary = 'dirichlet'
 cglob= 6
 cloc=6.
 resolution = 50
@@ -240,17 +289,26 @@ bases = create_bases2(gq, lq, 15, silent = False)
 import time
 
 A = []
-K = np.arange(0,10,.1)
+B = []
+K = np.arange(0,10,.2)
 for k in K:
 	print k
 	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
-	#gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
+	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
 	t = time.time()
 	#a = calculate_inf_sup_constant(gq, lq, bases, mus)
-	#a = calculate_inf_sup_constant2(gq, lq, mus)
-	a = calculate_continuity_constant(gq, lq, mus)
+	a = calculate_inf_sup_constant2(gq, lq)
+	b = calculate_continuity_constant(gq, lq)
 	print time.time()-t, a
 	A.append(a)
+	B.append(b)
+
+from matplotlib import pyplot as plt
+plt.figure()
+plt.plot(K, B, label = "con-constant")
+plt.xlabel('k')
+plt.legend(loc='upper right')
+plt.show()
 
 from matplotlib import pyplot as plt
 plt.figure()
@@ -404,7 +462,7 @@ resolution = 50
 coarse_grid_resolution = 10
 p = helmholtz(boundary = boundary)
 
-k=6
+k=2
 mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
 
@@ -413,14 +471,24 @@ H1 = gq["h1_prod"]._matrix
 H1_0 = gq["h1_0_prod"]._matrix
 Y = H1_0
 X = H1
+"""
+a = gq["data"]['boundary_info'].dirichlet_boundaries(2)
+b = np.arange(A.shape[0])
+c = np.delete(b,a)
 
+A = A[:,c][c,:]
+X = X[:,c][c,:]
+Y = Y[:,c][c,:]
+"""
 Yinv = sp.factorized(Y)
 def mv(v):
 	return A.H.dot(Yinv(A.dot(v)))
 M1 = LinearOperator(A.shape, matvec = mv)
 print "trying"
-eigs = sp.eigs(M1, M=X, k=100, tol = 1e-4)
-gq["d"].visualize(NumpyVectorArray(eigs[1].real.T))
+eigs = sp.eigs(M1, M=X, which = 'SM', tol = 1e-1, k=100)
+e1 = np.zeros(H1.shape[0])
+e1[c] = eigs[1][:,0].real
+gq["d"].visualize(NumpyVectorArray(e1.T))
 eigvals = eigs[0]
 eigvals = np.sqrt(np.abs(eigvals))
 eigvals.sort()
