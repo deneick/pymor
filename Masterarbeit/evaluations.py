@@ -87,7 +87,7 @@ def ungleichung(it, k, boundary, save, cglob = 0, cloc = 0, plot=False, resoluti
 	calculate_lambda_min(gq, lq)	
 	d = gq["d"]
 	u = d.solve(mus)
-	tols = np.logspace(-10,5,5)#16)	
+	tols = np.logspace(-10,5,16)	
 	LS = []
 	RS2 = []
 	for tol in tols:
