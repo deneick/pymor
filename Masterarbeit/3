@@ -1,3 +1,60 @@
+it=1; acc=1e-2; boundary= 'robin'; krang  = [6.]; cloc0 = 0; cloc1 = 1; cloc2 = 1; resolution = 100; coarse_grid_resolution = 10
+p = helmholtz(boundary = boundary)	
+ls = []
+rs2 = []
+k=6.
+print k
+cglob = -1j*k
+cloc = cloc0+ cloc1*k+cloc2*k**2
+mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calT = True, calQ = True)
+calculate_continuity_constant(gq, lq)
+calculate_inf_sup_constant2(gq, lq)	
+calculate_lambda_min(gq, lq)	
+d = gq["d"]
+u = d.solve(mus)
+bases = create_bases(gq, lq, num_testvecs=20, transfer = 'robin', target_accuracy = acc, calC = False)
+rssum2 = 0
+for space in gq["spaces"]:
+	ldict = lq[space]
+	basis = bases[space]
+	M = ldict["range_product"]._matrix
+	S = ldict["source_product"]._matrix
+	M_sparse = scipy.sparse.csr_matrix(M)
+	T = ldict["transfer_matrix_robin"]
+	B = basis._array.T
+	T1 = T - B.dot(B.conj().T).dot(M_sparse.dot(T))
+	maxval = operator_svd2(T1, S, M_sparse)[0][0]
+	rssum2 += maxval**2
+ru = reconstruct_solution(gq,lq,bases)
+print (gq["continuity_constant"]/gq["inf_sup_constant"])*4*np.sqrt(rssum2)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 from problems import *
 import numpy as np
 from pymor.basic import *
@@ -7,7 +64,7 @@ from generate_solution import *
 
 k=6.
 cglob= -6j
-cloc=1.-0.5j
+cloc=1.-0.17j
 resolution = 100
 coarse_grid_resolution = 10
 mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
@@ -16,8 +73,8 @@ p = helmholtz(boundary = 'robin')
 set_log_levels(levels={'pymor': 'WARN'})
 
 gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus, calT = True, calQ = True)
-bases = create_bases(gq, lq, num_testvecs=20, transfer = 'robin', target_accuracy = 1e-3, calC = True)
-ru = reconstruct_solution(gq,lq,basis, silent = False)
+bases = create_bases(gq, lq, num_testvecs=20, transfer = 'robin', target_accuracy = 1e-2, calC = True)
+ru = reconstruct_solution(gq,lq,bases, silent = False)
 d = gq["d"]
 u = d.solve(mus)
 dif = u-ru

@@ -229,6 +229,7 @@ def calculate_testlimit(gq, lq, space, num_testvecs, target_accuracy, max_failur
 	ldict = lq[space]
 	coarse_grid_resolution = gq["coarse_grid_resolution"]
 	tol_i = target_accuracy*gq["inf_sup_constant"]/( (coarse_grid_resolution -1) *4 * gq["continuity_constant"]) 
+	print "tol_i: ", tol_i
 	local_failure_tolerance = max_failure_probability / ( (coarse_grid_resolution -1)*4. )
 	testlimit_zeta = testlimit(
                 failure_tolerance=local_failure_tolerance,

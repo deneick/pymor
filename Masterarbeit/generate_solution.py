@@ -34,8 +34,8 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 		else: 
 			transop = ldict["robin_transfer"]
 
-		if testlimit is None:		
-			testlimit = calculate_testlimit(gq, lq, space, num_testvecs, target_accuracy, max_failure_probability)	
+		#if testlimit is None:		
+		testlimit = calculate_testlimit(gq, lq, space, num_testvecs, target_accuracy, max_failure_probability)	
 	
 		testvecs = transop.apply(NumpyVectorArray(np.random.normal(size=transop.source.dim)))
 		for i in range(num_testvecs-1):
