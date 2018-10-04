@@ -128,7 +128,7 @@ def ungleichung(it, k, boundary, save, nrang  = np.arange(0,100,5), cglob = 0, c
 		plt.xlabel('Basis size')
 		plt.show()
 
-def ungleichungk(it, n, boundary, save, krang  = np.arange(0.1,50.1,0.2), cloc0 = 0, cloc1 = 1, cloc2 = 1, plot=False, resolution = 100, coarse_grid_resolution = 10):
+def ungleichungk(it, acc, boundary, save, krang  = np.arange(0.1,50.1,0.2), cloc0 = 0, cloc1 = 1, cloc2 = 1, plot=False, resolution = 100, coarse_grid_resolution = 10):
 	#import time
 	p = helmholtz(boundary = boundary)	
 	LS = []
@@ -140,7 +140,8 @@ def ungleichungk(it, n, boundary, save, krang  = np.arange(0.1,50.1,0.2), cloc0 
 		mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calT = True, calQ = True)
 		calculate_continuity_constant(gq, lq)
-		calculate_inf_sup_constant2(gq, lq)		
+		calculate_inf_sup_constant2(gq, lq)	
+		calculate_lambda_min(gq, lq)	
 		d = gq["d"]
 		u = d.solve(mus)
 		for j in range(min(20-n/5,it)):
@@ -149,7 +150,7 @@ def ungleichungk(it, n, boundary, save, krang  = np.arange(0.1,50.1,0.2), cloc0 
 			#print time.localtime(time.time()).tm_hour , " : ", time.localtime(time.time()).tm_min , " : ", time.localtime(time.time()).tm_sec
 			ls = []
 			rs2 = []
-			bases = create_bases2(gq,lq,n,transfer = 'robin')
+			bases = create_bases(gq, lq, num_testvecs=20, transfer = 'robin', target_accuracy = acc, calC = False)
 			rssum2 = 0
 			for space in gq["spaces"]:
 				ldict = lq[space]
