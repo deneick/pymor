@@ -18,6 +18,7 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 		calculate_inf_sup_constant2(gq, lq)
 	if not silent:
 		print "creating bases"
+	dontusetestlimit = testlimit is None
 	bases = {}
 	for space in gq["spaces"]:
 		ldict = lq[space]
@@ -34,8 +35,8 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 		else: 
 			transop = ldict["robin_transfer"]
 
-		#if testlimit is None:		
-		testlimit = calculate_testlimit(gq, lq, space, num_testvecs, target_accuracy, max_failure_probability)	
+		if dontusetestlimit:		
+			testlimit = calculate_testlimit(gq, lq, space, num_testvecs, target_accuracy, max_failure_probability)	
 	
 		testvecs = transop.apply(NumpyVectorArray(np.random.normal(size=transop.source.dim)))
 		for i in range(num_testvecs-1):

@@ -188,12 +188,12 @@ p = helmholtz(boundary = boundary)
 gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calQ = True, calT = True)
 d = gq["d"]
 u = d.solve(mus)
-bases = create_bases(gq, lq, num_testvecs, transfer = 'robin', target_accuracy = 1e-0, calC = True)
-tolerances = np.logspace(-15,0,10)
+#bases = create_bases(gq, lq, num_testvecs, transfer = 'robin', target_accuracy = 1e-0, calC = True)
+tolerances = np.logspace(-10,5,10)
 ERR = []
 for tol in tolerances:
 	print tol
-	bases = create_bases(gq, lq, num_testvecs, transfer = 'robin', target_accuracy = tol, calC = False)
+	bases = create_bases(gq, lq, num_testvecs, transfer = 'robin', target_accuracy = tol,testlimit = tol*0.129, calC = False)
 	err = []
 	for space in gq["spaces"]:
 		ldict = lq[space]
@@ -211,6 +211,7 @@ mean = np.mean(ERR, axis = 1)
 from matplotlib import pyplot as plt
 plt.figure()
 plt.loglog(tolerances, mean, label = "err")
+plt.loglog(tolerances, tolerances, label = "y=x")
 plt.legend(loc='upper right')
 plt.xlabel('tol')
 plt.gca().invert_xaxis()
