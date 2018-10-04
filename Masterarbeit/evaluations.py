@@ -144,7 +144,7 @@ def ungleichungk(it, acc, boundary, save, krang  = np.arange(0.1,50.1,0.2), cloc
 		calculate_lambda_min(gq, lq)	
 		d = gq["d"]
 		u = d.solve(mus)
-		for j in range(min(20-n/5,it)):
+		for j in range(it):
 			print j,
 			sys.stdout.flush()
 			#print time.localtime(time.time()).tm_hour , " : ", time.localtime(time.time()).tm_min , " : ", time.localtime(time.time()).tm_sec
