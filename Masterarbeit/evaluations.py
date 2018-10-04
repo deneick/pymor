@@ -128,7 +128,7 @@ def ungleichung(it, k, boundary, save, nrang  = np.arange(0,100,5), cglob = 0, c
 		plt.xlabel('Basis size')
 		plt.show()
 
-def ungleichungk(it, n, boundary, save, krang  = np.arange(0.1,50.1,0.2), cloc0 = 0, cloc1 = 1, cloc2 = 1, plot=False, resolution = 100, coarse_grid_resolution = 10):
+def ungleichungk(it, n, boundary, save, krang  = np.arange(0.1,50.1,1.0), cloc0 = 0, cloc1 = 1, cloc2 = 1, plot=False, resolution = 100, coarse_grid_resolution = 10):
 	#import time
 	p = helmholtz(boundary = boundary)	
 	LS = []
