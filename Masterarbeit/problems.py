@@ -22,7 +22,7 @@ def h_problem(closed_connections=(3, 4), contrast=1e5, c = 1e5, g = 0, boundary 
     filepath = os.path.dirname(os.path.realpath(__file__))
     rhsfunction = BitmapFunction(os.path.join(filepath,"rhs.png"), range=(-128./127.*scaling, 127./127.*scaling))
     backgroundfunction = ConstantFunction(1., dim_domain=2)
-    robin_data = (ConstantFunction(-c, dim_domain=2), ConstantFunction(g, dim_domain=2))
+    robin_data = (ConstantFunction(c, dim_domain=2), ConstantFunction(g, dim_domain=2))
     coefficientfunction = BitmapFunction(os.path.join(filepath,'h_allopen.png'), range=(1., 0.))
     for i in closed_connections:
         coefficientfunction = coefficientfunction + BitmapFunction(os.path.join(filepath,'h_close'+str(i)+'.png'), range=(1., 0))
@@ -36,7 +36,7 @@ def h_problem(closed_connections=(3, 4), contrast=1e5, c = 1e5, g = 0, boundary 
                         name="H")
     return p
 
-def poisson_problem(c = 1, g = 1, boundary = 'dirichlet'):
+def poisson_problem(c = 1, g = 0, boundary = 'dirichlet'):
     backgroundfunction = ConstantFunction(1., dim_domain=2)
     robin_data = (ConstantFunction(c, dim_domain=2), ConstantFunction(g, dim_domain=2))
     domain=RectDomain(bottom = BoundaryType(boundary), top = BoundaryType(boundary), left = BoundaryType(boundary), right = BoundaryType(boundary))

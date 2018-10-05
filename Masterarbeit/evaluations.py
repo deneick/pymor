@@ -63,11 +63,11 @@ def evaluation(it, lim, k, boundary, save, cglob = 0, cloc = 0, plot = False, re
 	limits = [0, 25, 50, 75, 100]
 	means_dirichlet_h1 = np.mean(h1_dirichlet, axis = 1)
 	means_robin_h1 = np.mean(h1_robin, axis = 1)
-	#percentiles_dirichlet_h1 = np.array(np.percentile(h1_dirichlet, limits, axis=1))
-	#percentiles_robin_h1 = np.array(np.percentile(h1_robin, limits, axis=1))
+	percentiles_dirichlet_h1 = np.array(np.percentile(h1_dirichlet, limits, axis=1))
+	percentiles_robin_h1 = np.array(np.percentile(h1_robin, limits, axis=1))
 	#import ipdb; ipdb.set_trace()
-	#data = np.vstack([means_dirichlet_h1, percentiles_dirichlet_h1, means_robin_h1, percentiles_robin_h1]).T
-	data = np.vstack([nrang, means_dirichlet_h1, means_robin_h1]).T
+	data = np.vstack([means_dirichlet_h1, percentiles_dirichlet_h1, means_robin_h1, percentiles_robin_h1]).T
+	#data = np.vstack([nrang, means_dirichlet_h1, means_robin_h1]).T
 	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
 	if plot:
 		from matplotlib import pyplot as plt
@@ -129,7 +129,7 @@ def ungleichung(it, k, boundary, save, cglob = 0, cloc = 0, plot=False, resoluti
 		plt.gca().invert_xaxis()
 		plt.show()
 
-def ungleichungk(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.2), cloc0 = 0, cloc1 = 1, cloc2 = 1, plot=False, resolution = 100, coarse_grid_resolution = 10):
+def ungleichungk(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), cloc0 = 0, cloc1 = 1, cloc2 = 1, plot=False, resolution = 100, coarse_grid_resolution = 10):
 	p = helmholtz(boundary = boundary)	
 	LS = []
 	RS2 = []
