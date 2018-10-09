@@ -17,7 +17,7 @@ def h_problem(closed_connections=(3, 4), contrast=1e5, c = 1e5, g = 0, boundary 
     for i in closed_connections:
         assert i in (1, 2, 3, 4, 5, 6)
 
-    scaling = 1e5
+    scaling = 1
     domain=RectDomain(bottom = BoundaryType(boundary), top = BoundaryType(boundary), left = BoundaryType(boundary), right = BoundaryType(boundary))
     filepath = os.path.dirname(os.path.realpath(__file__))
     rhsfunction = BitmapFunction(os.path.join(filepath,"rhs.png"), range=(-128./127.*scaling, 127./127.*scaling))

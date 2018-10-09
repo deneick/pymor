@@ -39,4 +39,4 @@ for x in rang:
 	xi+=1
 X,Y = np.meshgrid(rang, rang)
 data = np.vstack([X.T.ravel(),Y.T.ravel(),err_r.ravel()]).T
-open("dats/cerrp.dat", "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
+open("dats/cerrp2d.dat", "w").writelines([" ".join(map(str, v)) + "\n" for v in data])

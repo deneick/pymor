@@ -211,7 +211,7 @@ resolution = 50
 coarse_grid_resolution = 10
 #rang = np.concatenate((-np.logspace(10,1,10),np.logspace(0,10,11)))
 #rang = np.logspace(5,6,10)
-rang = np.arange(-5,5,0.5)
+rang = np.arange(-2,2,0.2)
 err_r = []
 xi = 0
 for c in rang:
@@ -242,12 +242,14 @@ for i in range(it):
 em = np.mean(es)
 from matplotlib import pyplot as plt
 plt.figure()
-plt.loglog(rang, err_r, label = "err")
+#plt.loglog(rang, err_r, label = "err")
+plt.semilogy(rang, err_r, label = "err")
 plt.legend(loc='upper right')
 plt.xlabel('c')
-plt.xscale('symlog')
-plt.hlines(em,1e5,1e6)
+#plt.xscale('symlog')
+#plt.hlines(em,1e5,1e6)
 #plt.hlines(em,-1e10,1e10)
+plt.hlines(em,-5,5)
 plt.show()
 
 data = np.vstack([rang, err_r]).T

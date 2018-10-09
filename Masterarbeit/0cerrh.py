@@ -47,4 +47,4 @@ open("dats/koerztest.dat", "w").writelines([" ".join(map(str, v)) + "\n" for v i
 rang2 = np.arange(-10,11)
 X,Y = np.meshgrid(rang2, rang2)
 data = np.vstack([X.T.ravel(),Y.T.ravel(),err_r.ravel()]).T
-open("dats/cerrh.dat", "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
+open("dats/cerrh2d.dat", "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
