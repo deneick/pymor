@@ -44,7 +44,7 @@ def evaluation(it, lim, k, boundary, save, cglob = 0, cloc = 0, plot = False, re
 		print "i: ", i
 		h1d = []
 		h1r = []
-		for j in range(it):
+		for j in range(max(it-n,2)):
 			print j,
 			sys.stdout.flush()
 			#print time.localtime(time.time()).tm_hour , " : ", time.localtime(time.time()).tm_min , " : ", time.localtime(time.time()).tm_sec
@@ -213,13 +213,13 @@ def plotconstants(boundary, save, cloc0 = 0, cloc1 = 1, cloc2 = 1, resolution = 
 	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
 	if plot:	
 		plt.figure()
-		plt.plot(K, B, label = "inf-sup-constant2")
+		plt.plot(kspace, B, label = "inf-sup-constant")
 		plt.xlabel('k')
 		plt.legend(loc='upper right')
 		plt.show()
 
 		plt.figure()
-		plt.plot(K, C, label = "continuity-constant")
+		plt.plot(kspace, C, label = "continuity-constant")
 		plt.xlabel('k')
 		plt.legend(loc='upper right')
 		plt.show()
@@ -283,7 +283,7 @@ def kerr(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, r
 		plt.legend(loc='upper right')
 		plt.show()
 
-def resolution(it, k, n, boundary, save, cloc = 0, plot = False, coarse_grid_resolution = 10):
+def resolution(it, k, n, boundary, save, cloc = 0, returnvals = False, coarse_grid_resolution = 10):
 	cglob = -1j*k
 	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 	p = helmholtz(boundary = boundary)
@@ -303,13 +303,8 @@ def resolution(it, k, n, boundary, save, cloc = 0, plot = False, coarse_grid_res
 	errs = np.mean(err, axis = 1)
 	data = np.vstack([space, errs]).T
 	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
-	if plot:
-		from matplotlib import pyplot as plt
-		plt.figure()
-		plt.plot(space, errs, label = "err")
-		plt.legend(loc='upper right')
-		plt.xlabel('res')
-		plt.show()
+	if returnvals:
+		return [space, errs]
 
 def cerr2D(it, n, k, boundary, save, cglob = 0, rang = np.arange(-10.,10.,1.), yrang = None, plot = False, resolution = 200, coarse_grid_resolution = 10):
 	#c/err
