@@ -70,6 +70,33 @@ while(len(svd40)<len(svd00)):
 while(len(svd50)<len(svd00)):
 	svd50.append(svd50[len(svd50)-1])
 
+from matplotlib import pyplot as plt
+plt.figure()
+plt.semilogy(svd0, label = "0")
+plt.semilogy(svd1, label = "1")
+plt.semilogy(svd2, label = "2")
+plt.semilogy(svd3, label = "3")
+plt.semilogy(svd4, label = "4")
+plt.semilogy(svd5, label = "5")
+plt.xlim(0,50)
+plt.legend(loc='upper right')
+plt.xlabel('i')
+plt.title('k=6')
+plt.show()
+
+plt.figure()
+plt.semilogy(svd00, label = "0")
+plt.semilogy(svd10, label = "1")
+plt.semilogy(svd20, label = "2")
+plt.semilogy(svd30, label = "3")
+plt.semilogy(svd40, label = "4")
+plt.semilogy(svd50, label = "5")
+plt.xlim(0,80)
+plt.legend(loc='upper right')
+plt.xlabel('i')
+plt.title('k=200')
+plt.show()
+
 data = np.vstack([svd0, svd1, svd2, svd3, svd4, svd5]).T
 data1 = np.vstack([svd00, svd10, svd20, svd30, svd40, svd50]).T
 open("dats/svd6.dat", "w").writelines([" ".join(map(str, v)) + "\n" for v in data])

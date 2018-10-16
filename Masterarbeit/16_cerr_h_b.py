@@ -37,14 +37,21 @@ for x in rang:
 		err_r[xi][yi]=np.mean(e_r)
 		yi+=1
 	xi+=1
-"""
-X,Y = np.meshgrid(rang, rang)
-data = np.vstack([X.T.ravel(),Y.T.ravel(),err_r.ravel()]).T
-open("dats/koerztest.dat", "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
-"""
 
 
 rang2 = np.arange(-10,11)
 X,Y = np.meshgrid(rang2, rang2)
 data = np.vstack([X.T.ravel(),Y.T.ravel(),err_r.ravel()]).T
 open("dats/cerrh2d.dat", "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
+
+X,Y = np.meshgrid(rang, yrang)
+data = np.vstack([X.T.ravel(),Y.T.ravel(),err_r.ravel()]).T
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+from matplotlib import cm
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+surf = ax.plot_surface(X,Y,err_r,  cstride = 1, rstride =1, cmap = cm.coolwarm, linewidth=0, antialiased=False)
+fig.colorbar(surf, shrink =0.5, aspect=5)
+plt.show()
+
