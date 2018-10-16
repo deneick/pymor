@@ -40,18 +40,18 @@ def evaluation(it, lim, k, boundary, save, cglob = 0, cloc = 0, plot = False, re
 	h1_dirichlet = []
 	h1_robin = []
 	nrang = np.arange(0,lim,2)
-	for i in nrang:
-		print "i: ", i
+	for n in nrang:
+		print "n: ", n
 		h1d = []
 		h1r = []
 		for j in range(max(it-n,2)):
 			print j,
 			sys.stdout.flush()
 			#print time.localtime(time.time()).tm_hour , " : ", time.localtime(time.time()).tm_min , " : ", time.localtime(time.time()).tm_sec
-			basis_dirichlet = create_bases2(gq,lq,i)
+			basis_dirichlet = create_bases2(gq,lq,n)
 			ru_dirichlet = reconstruct_solution(gq,lq,basis_dirichlet)
 			del basis_dirichlet
-			basis_robin = create_bases2(gq,lq,i,transfer = 'robin')
+			basis_robin = create_bases2(gq,lq,n,transfer = 'robin')
 			ru_robin = reconstruct_solution(gq,lq,basis_robin)
 			del basis_robin
 			dif_dirichlet = u -ru_dirichlet
@@ -78,7 +78,7 @@ def evaluation(it, lim, k, boundary, save, cglob = 0, cloc = 0, plot = False, re
 		plt.xlabel('Basis size')
 		plt.show()
 
-def ungleichung(it, k, boundary, save, cglob = 0, cloc = 0, plot=False, resolution = 200, coarse_grid_resolution = 10):
+def ungleichung(it, k, boundary, save, cglob = 0, cloc = 0, returnvals=False, resolution = 200, coarse_grid_resolution = 10):
 	p = helmholtz(boundary = boundary)
 	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calT = True, calQ = True)
@@ -119,17 +119,10 @@ def ungleichung(it, k, boundary, save, cglob = 0, cloc = 0, plot=False, resoluti
 	means_rs2 = np.mean(RS2, axis = 1)
 	data = np.vstack([tols, means_ls, means_rs2]).T
 	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
-	if plot:	
-		from matplotlib import pyplot as plt
-		plt.figure()
-		plt.loglog(tols, means_ls, label = "ls")
-		plt.loglog(tols, means_rs2, label = "rs2")
-		plt.legend(loc='upper right')
-		plt.xlabel('Basis size')
-		plt.gca().invert_xaxis()
-		plt.show()
+	if returnvals:
+		return [tols, means_ls, means_rs2]
 
-def ungleichungk(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), cloc0 = 0, cloc1 = 1, cloc2 = 1, plot=False, resolution = 100, coarse_grid_resolution = 10):
+def ungleichungk(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), cloc0 = 0, cloc1 = 1, cloc2 = 1, returnvals=False, resolution = 100, coarse_grid_resolution = 10):
 	p = helmholtz(boundary = boundary)	
 	LS = []
 	RS2 = []
@@ -171,18 +164,12 @@ def ungleichungk(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), cloc
 	means_rs2 = np.mean(RS2, axis = 1)
 	data = np.vstack([krang, means_ls, means_rs2]).T
 	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
-	if plot:	
-		from matplotlib import pyplot as plt
-		plt.figure()
-		plt.semilogy(krang, means_ls, label = "ls")
-		plt.semilogy(krang, means_rs2, label = "rs2")
-		plt.legend(loc='upper right')
-		plt.xlabel('Basis size')
-		plt.show()
+	if returnvals:
+		return [krang, means_ls, means_rs2]
 
-def plotconstants(boundary, save, cloc0 = 0, cloc1 = 1, cloc2 = 1, resolution = 50, coarse_grid_resolution = 10, plot = False):
+def plotconstants(boundary, save, cloc0 = 0, cloc1 = 1, cloc2 = 1, resolution = 50, coarse_grid_resolution = 10, returnvals = False):
 	p = helmholtz(boundary = boundary)
-	kspace = np.arange(0.1,10,.1)
+	kspace = np.arange(0.1,10.,.1)
 	#A = []
 	B = []
 	C = []
@@ -211,18 +198,8 @@ def plotconstants(boundary, save, cloc0 = 0, cloc1 = 1, cloc2 = 1, resolution = 
 		#D.append(d)
 	data = np.vstack([kspace, B, C]).T
 	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
-	if plot:	
-		plt.figure()
-		plt.plot(kspace, B, label = "inf-sup-constant")
-		plt.xlabel('k')
-		plt.legend(loc='upper right')
-		plt.show()
-
-		plt.figure()
-		plt.plot(kspace, C, label = "continuity-constant")
-		plt.xlabel('k')
-		plt.legend(loc='upper right')
-		plt.show()
+	if returnvals:
+		return [kspace, B, C]
 
 def test(transfer = 'robin',boundary = 'dirichlet', n=15,k=6.,cglob= 6, cloc=6., title = 'test', resolution = 200, coarse_grid_resolution = 10):
 	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
