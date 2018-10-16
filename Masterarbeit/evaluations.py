@@ -12,7 +12,6 @@ kerr/kerr_neumann berechnet den relativen Fehler abhaengig von k
 cerr berechnet den relativen Fehler abhaengig von c(dem lokalen Robin-Parameter)
 
 
-zum plotten, setze plot=True
 it = Anzahl der Wiederholungen fuer die Statistik
 lim = maximale Basisgroesse
 """
@@ -39,7 +38,7 @@ def evaluation(it, lim, k, boundary, save, cglob = 0, cloc = 0, plot = False, re
 	u = d.solve(mus)
 	h1_dirichlet = []
 	h1_robin = []
-	nrang = np.arange(0,lim,2)
+	nrang = np.arange(0,lim,5)
 	for n in nrang:
 		print "n: ", n
 		h1d = []
