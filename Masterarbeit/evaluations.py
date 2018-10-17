@@ -43,7 +43,7 @@ def evaluation(it, lim, k, boundary, save, cglob = 0, cloc = 0, plot = False, re
 		print "n: ", n
 		h1d = []
 		h1r = []
-		for j in range(min(it, (lim-n)/2)):
+		for j in range(it):
 			print j,
 			sys.stdout.flush()
 			#print time.localtime(time.time()).tm_hour , " : ", time.localtime(time.time()).tm_min , " : ", time.localtime(time.time()).tm_sec
