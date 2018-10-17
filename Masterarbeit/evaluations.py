@@ -1,19 +1,34 @@
 """
-test berechnet und visualisiert die approximierte Loesung bzgl fester Basisgroesse
+test1 berechnet und visualisiert eine reduzierte Loesung bzgl fester Basisgroesse
 
-evaluation/evaluation_neumann berechnet den relativen Fehler abhaengig von der Basisgroesse
+test2 berechnet und visualisiert eine reduzierte Loesung mit dem adaptiven Algorithmus (Alg. 3)
 
-ungleichung berechnet die Genauigkeit der apriori Abschaetzung
+evaluation berechnet den relativen Fehler abhaengig von der Basisgroesse
 
-accuracy berechnet den relativen Fehler abhaengig von der gewuenschten Genauigkeit gemaess des adaptiven Algos
+ungleichung berechnet den relativen Fehler abhängig von der gegebenen Toleranz bezueglich des adaptiven Algorithmus und die a priori Grenze
 
-kerr/kerr_neumann berechnet den relativen Fehler abhaengig von k
+ungleichungk berechnet den relativen Fehler abhaengig von der Wellenzahl k bezueglich des adaptiven Algorithmus und die a priori Grenze
 
-cerr berechnet den relativen Fehler abhaengig von c(dem lokalen Robin-Parameter)
+plotconstants berechnet die inf-sup Konstante und die Stetigkeitskonstante in Abhaengigkeit von der Wellenzahl k
+
+kerr berechnet den relativen Fehler abhaengig von der Wellenzahl k mit dem nicht-adaptiven Algorithmus (Alg. 4)
+
+resolution berechnet den relativen Fehler in Abhaengigkeit von der feinen Gitterauflösung mit Alg. 4
+
+cerr2D berechnet den relativen Fehler abhaengig von c(dem lokalen Robin-Parameter) mit Alg. 4
+
+knerr2D berechnet den relativen Fehler abhaengig von der Wellenzahl k und der Basisgröße n mit Alg. 4
 
 
 it = Anzahl der Wiederholungen fuer die Statistik
 lim = maximale Basisgroesse
+k = Wellenzahl
+boundary = globale Randbedingung
+save = Speicherort für Daten
+cglob = globaler Robin-Parameter
+cloc = lokaler Robin-Parameter (für Transferoperator)
+resolution = feine Gitterauflösung
+coarse_grid_resolution = grobe Gitterauflösung
 """
 
 from problems import *
@@ -200,11 +215,23 @@ def plotconstants(boundary, save, cloc0 = 0, cloc1 = 1, cloc2 = 1, resolution = 
 	if returnvals:
 		return [kspace, B, C]
 
-def test(transfer = 'robin',boundary = 'dirichlet', n=15,k=6.,cglob= 6, cloc=6., title = 'test', resolution = 200, coarse_grid_resolution = 10):
+def test1(transfer = 'robin',boundary = 'dirichlet', n=15,k=6.,cglob= 6, cloc=6., title = 'test', resolution = 100, coarse_grid_resolution = 10):
 	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 	p = helmholtz(boundary = boundary)
 	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
 	basis = create_bases2(gq,lq,n,transfer = transfer, silent = False)
+	ru = reconstruct_solution(gq,lq,basis, silent = False)
+	d = gq["d"]
+	u = d.solve(mus)
+	dif = u-ru
+	print d.h1_norm(dif)[0]/d.h1_norm(u)[0]
+	d.visualize((dif.real, dif.imag, u.real, u.imag, ru.real, ru.imag), legend = ('dif.real', 'dif.imag', 'u.real', 'u.imag', 'ru.real', 'ru.imag'), separate_colorbars = True, title = title)
+
+def test2(transfer = 'robin',boundary = 'dirichlet', acc=1e-2,k=6.,cglob= 6, cloc=6., title = 'test', resolution = 100, coarse_grid_resolution = 10):
+	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+	p = helmholtz(boundary = boundary)
+	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus, calQ = True)
+	basis = create_bases(gq,lq,20,transfer = transfer, target_accuracy = acc, silent = False)
 	ru = reconstruct_solution(gq,lq,basis, silent = False)
 	d = gq["d"]
 	u = d.solve(mus)
@@ -220,7 +247,7 @@ def kerr(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, r
 	usecglob = (cglob is None)
 	for k in rang:
 		if usecglob:
-			cglob = -1j*k 			######wichtig!!
+			cglob = -1j*k 			
 		cloc = cloc0+ cloc1*k+cloc2*k**2
 		print "k: ", k, "cloc: ", cloc
 		mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
@@ -365,6 +392,7 @@ def knerr2D(it, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, k
 		fig.colorbar(surf, shrink =0.5, aspect=5)
 		plt.show()
 
+"""
 def findcloc(it=50, k=20, n=15, s = 4., smin = 0.5, cloc = 0., boundary = 'robin'):
 	p = helmholtz(boundary = boundary)
 	dic = {}
@@ -453,3 +481,4 @@ def ckerr2D(it, n, boundary, save, cglob = None, krang = np.arange(0.,20.,2.), c
 	X,Y = np.meshgrid(krang, crang)
 	data = np.vstack([X.T.ravel(),Y.T.ravel(),err_r.ravel()]).T
 	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
+"""

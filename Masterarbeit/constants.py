@@ -16,6 +16,7 @@ import copy
 import scipy.sparse.linalg as sp
 from scipy.sparse.linalg import LinearOperator
 
+#Berechne lambda_min:
 def calculate_lambda_min(gq, lq):
 	coarse_grid_resolution = gq["coarse_grid_resolution"]
 	spaces = gq["spaces"]
@@ -28,7 +29,132 @@ def calculate_lambda_min(gq, lq):
 		#print "calculated lambda_min: ", val
 	print "calculated all lambdas"
 
+#Berechne inf-sup Konstante tilde_beta bezüglich des reduzierten Systems (vgl. S.9):
+def calculate_inf_sup_constant(gq,lq, bases):#, mus):
+	op = gq["op_fixed"]
+	#op = gq["op_fixed_not_assembled"].assemble(mus)
+	rhs = gq["rhs"]
+	spaces = gq["spaces"]
+	localizer = gq["localizer"]
+	operator_reductor = LRBOperatorProjection(op, rhs, localizer, spaces, bases, spaces, bases)
+	A = operator_reductor.get_reduced_operator()._matrix
 
+	#H10 = gq["h1_0_prod"]
+	#operator_reductor0 = LRBOperatorProjection(H10, rhs, localizer, spaces, bases, spaces, bases)
+	#Y = operator_reductor0.get_reduced_operator()._matrix
+	H1 = gq["h1_prod"]
+	operator_reductor = LRBOperatorProjection(H1, rhs, localizer, spaces, bases, spaces, bases)
+	X = operator_reductor.get_reduced_operator()._matrix
+	Y = operator_reductor.get_reduced_operator()._matrix
+
+	Yinv = sp.factorized(Y.astype(complex))
+	def mv(v):
+		return A.H.dot(Yinv(A.dot(v)))
+	M1 = LinearOperator(A.shape, matvec = mv)
+
+	eigvals = sp.eigs(M1, M=X, which = 'SM', tol = 1e-1)[0]
+	eigvals = np.sqrt(np.abs(eigvals))
+	eigvals.sort()
+	result = eigvals[0]
+	gq["inf_sup_constant"] =  result
+	print "calculated_inf_sup_constant: ", result
+	return result
+
+#Berechne inf-sup Konstante beta_h bezüglich des Finite-Elemente-Raumes (vgl. S.9):
+def calculate_inf_sup_constant2(gq,lq):	
+	op = gq["op"]
+	A = op._matrix
+	H1 = gq["h1_prod"]._matrix
+	H1_0 = gq["h1_0_prod"]._matrix
+	Y = H1
+	X = H1
+
+	try:
+		a = gq["data"]['boundary_info'].dirichlet_boundaries(2)
+		b = np.arange(A.shape[0])
+		c = np.delete(b,a)
+		A = A[:,c][c,:]
+		X = X[:,c][c,:]
+		Y = Y[:,c][c,:]
+	except KeyError:
+		pass
+
+	Yinv = sp.factorized(Y.astype(complex))
+	def mv(v):
+		return A.H.dot(Yinv(A.dot(v)))
+	M1 = LinearOperator(A.shape, matvec = mv)
+
+	#t = time.time()
+	eigvals = sp.eigs(M1, M=X, which = 'SM', tol = 1e-1, k=100)[0]
+	#print time.time()-t
+	eigvals = np.sqrt(np.abs(eigvals))
+	eigvals.sort()
+	result = eigvals[0]
+	gq["inf_sup_constant"] =  result
+	print "calculated_inf_sup_constant: ", result
+	return result
+
+#Berechne Stetigkeitskonstante (vgl. S.9):
+def calculate_continuity_constant(gq, lq):#, mus):
+	A = gq["op"]._matrix
+	#A = gq["d"].operator.assemble(mus)._matrix	
+	H1 = gq["h1_prod"]._matrix
+	H1_0 = gq["h1_0_prod"]._matrix
+	Y = H1
+	X = H1
+	
+	try:
+		a = gq["data"]['boundary_info'].dirichlet_boundaries(2)
+		b = np.arange(A.shape[0])
+		c = np.delete(b,a)
+		A = A[:,c][c,:]
+		X = X[:,c][c,:]
+		Y = Y[:,c][c,:]
+	except KeyError:
+		pass
+
+	Yinv = sp.factorized(Y.astype(complex))
+	def mv(v):
+		return A.H.dot(Yinv(A.dot(v)))
+	M1 = LinearOperator(A.shape, matvec = mv)
+	eigvals = sp.eigs(M1, M=X, k=1, tol = 1e-4)[0]
+	eigvals = np.sqrt(np.abs(eigvals))
+	eigvals[::-1].sort()
+	result = eigvals[0]
+	gq["continuity_constant"] =  result
+	print "calculated_continuity_constant: ", result
+	return result
+
+#Berechne Testlimit (vgl. Alg 2):
+def testlimit(failure_tolerance, dim_S, dim_R, num_testvecs, target_error, lambda_min):
+	"""
+	failure_tolerance:  maximum probability for failure of algorithm
+	dim_S: dimension of source space
+	dim_R: dimension of range space
+	num_testvecs: number of test vectors used
+	target_error: desired maximal norm of tested operator
+	lambda_min: smallest eigenvalue of matrix of inner product in source space
+	"""
+	return scipy.special.erfinv( (failure_tolerance / min(dim_S, dim_R))**(1./num_testvecs)) * target_error * np.sqrt(2. * lambda_min)
+
+#Berechne globales Testlimit (vgl. Alg. 2):
+def calculate_testlimit(gq, lq, space, num_testvecs, target_accuracy, max_failure_probability = 1e-15):
+	ldict = lq[space]
+	coarse_grid_resolution = gq["coarse_grid_resolution"]
+	tol_i = target_accuracy*gq["inf_sup_constant"]/( (coarse_grid_resolution -1) *4 * gq["continuity_constant"]) 
+	#print "tol_i: ", tol_i
+	local_failure_tolerance = max_failure_probability / ( (coarse_grid_resolution -1)*4. )
+	testlimit_zeta = testlimit(
+                failure_tolerance=local_failure_tolerance,
+                dim_S=ldict["robin_transfer"].source.dim,
+                dim_R=ldict["robin_transfer"].range.dim,
+                num_testvecs=num_testvecs,
+                target_error=tol_i,
+                lambda_min=ldict["lambda_min"]
+                )
+	return testlimit_zeta
+
+"""
 def calculate_Psi_norm_d(gq,lq):
 	spaces = gq["spaces"]
 	l = gq["localizer"]
@@ -78,98 +204,6 @@ def calculate_Psi_norm_r(gq,lq):
 		print "calculated Psi_norm: ", maxval
 	print "calculated all Psi_norms"
 
-def calculate_inf_sup_constant(gq,lq, bases):#, mus):
-	op = gq["op_fixed"]
-	#op = gq["op_fixed_not_assembled"].assemble(mus)
-	rhs = gq["rhs"]
-	spaces = gq["spaces"]
-	localizer = gq["localizer"]
-	operator_reductor = LRBOperatorProjection(op, rhs, localizer, spaces, bases, spaces, bases)
-	A = operator_reductor.get_reduced_operator()._matrix
-
-	H10 = gq["h1_0_prod"]
-	operator_reductor0 = LRBOperatorProjection(H10, rhs, localizer, spaces, bases, spaces, bases)
-	Y = operator_reductor0.get_reduced_operator()._matrix
-	H1 = gq["h1_prod"]
-	operator_reductor = LRBOperatorProjection(H1, rhs, localizer, spaces, bases, spaces, bases)
-	X = operator_reductor.get_reduced_operator()._matrix
-
-	Yinv = sp.factorized(Y.astype(complex))
-	def mv(v):
-		return A.H.dot(Yinv(A.dot(v)))
-	M1 = LinearOperator(A.shape, matvec = mv)
-
-	eigvals = sp.eigs(M1, M=X, which = 'SM', tol = 1e-1)[0]
-	eigvals = np.sqrt(np.abs(eigvals))
-	eigvals.sort()
-	result = eigvals[0]
-	gq["inf_sup_constant"] =  result
-	print "calculated_inf_sup_constant: ", result
-	return result
-
-def calculate_inf_sup_constant2(gq,lq):	
-	op = gq["op"]
-	A = op._matrix
-	H1 = gq["h1_prod"]._matrix
-	H1_0 = gq["h1_0_prod"]._matrix
-	Y = H1
-	X = H1
-
-	try:
-		a = gq["data"]['boundary_info'].dirichlet_boundaries(2)
-		b = np.arange(A.shape[0])
-		c = np.delete(b,a)
-		A = A[:,c][c,:]
-		X = X[:,c][c,:]
-		Y = Y[:,c][c,:]
-	except KeyError:
-		pass
-
-	Yinv = sp.factorized(Y.astype(complex))
-	def mv(v):
-		return A.H.dot(Yinv(A.dot(v)))
-	M1 = LinearOperator(A.shape, matvec = mv)
-
-	#t = time.time()
-	eigvals = sp.eigs(M1, M=X, which = 'SM', tol = 1e-1, k=100)[0]
-	#print time.time()-t
-	eigvals = np.sqrt(np.abs(eigvals))
-	eigvals.sort()
-	result = eigvals[0]
-	gq["inf_sup_constant"] =  result
-	print "calculated_inf_sup_constant: ", result
-	return result
-
-def calculate_continuity_constant(gq, lq):#, mus):
-	A = gq["op"]._matrix
-	#A = gq["d"].operator.assemble(mus)._matrix	
-	H1 = gq["h1_prod"]._matrix
-	H1_0 = gq["h1_0_prod"]._matrix
-	Y = H1
-	X = H1
-	
-	try:
-		a = gq["data"]['boundary_info'].dirichlet_boundaries(2)
-		b = np.arange(A.shape[0])
-		c = np.delete(b,a)
-		A = A[:,c][c,:]
-		X = X[:,c][c,:]
-		Y = Y[:,c][c,:]
-	except KeyError:
-		pass
-
-	Yinv = sp.factorized(Y.astype(complex))
-	def mv(v):
-		return A.H.dot(Yinv(A.dot(v)))
-	M1 = LinearOperator(A.shape, matvec = mv)
-	eigvals = sp.eigs(M1, M=X, k=1, tol = 1e-4)[0]
-	eigvals = np.sqrt(np.abs(eigvals))
-	eigvals[::-1].sort()
-	result = eigvals[0]
-	gq["continuity_constant"] =  result
-	print "calculated_continuity_constant: ", result
-	return result
-
 def calculate_continuity_constant2(gq, lq, bases):#, mus):
 	op = gq["op"]
 	A = op._matrix
@@ -213,30 +247,4 @@ def calculate_continuity_constant2(gq, lq, bases):#, mus):
 	gq["continuity_constant"] =  result
 	print "calculated_continuity_constant: ", result
 	return result
-
-def testlimit(failure_tolerance, dim_S, dim_R, num_testvecs, target_error, lambda_min):
-	"""
-	failure_tolerance:  maximum probability for failure of algorithm
-	dim_S: dimension of source space
-	dim_R: dimension of range space
-	num_testvecs: number of test vectors used
-	target_error: desired maximal norm of tested operator
-	lambda_min: smallest eigenvalue of matrix of inner product in source space
-	"""
-	return scipy.special.erfinv( (failure_tolerance / min(dim_S, dim_R))**(1./num_testvecs)) * target_error * np.sqrt(2. * lambda_min)
-
-def calculate_testlimit(gq, lq, space, num_testvecs, target_accuracy, max_failure_probability = 1e-15):
-	ldict = lq[space]
-	coarse_grid_resolution = gq["coarse_grid_resolution"]
-	tol_i = target_accuracy*gq["inf_sup_constant"]/( (coarse_grid_resolution -1) *4 * gq["continuity_constant"]) 
-	#print "tol_i: ", tol_i
-	local_failure_tolerance = max_failure_probability / ( (coarse_grid_resolution -1)*4. )
-	testlimit_zeta = testlimit(
-                failure_tolerance=local_failure_tolerance,
-                dim_S=ldict["robin_transfer"].source.dim,
-                dim_R=ldict["robin_transfer"].range.dim,
-                num_testvecs=num_testvecs,
-                target_error=tol_i,
-                lambda_min=ldict["lambda_min"]
-                )
-	return testlimit_zeta
+"""

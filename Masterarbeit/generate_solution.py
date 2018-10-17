@@ -7,8 +7,9 @@ import numpy as np
 import scipy
 from constants import *
 
+#adaptive Basiserstellung (Algorithmus 3)
 def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None, target_accuracy = 1e-3, max_failure_probability = 1e-15, silent = True, calC = True):
-	#adaptive Basiserstellung
+	#Berechnung der Konstanten:	
 	if calC:
 		if not silent:
 			print "calculating constants"
@@ -18,10 +19,11 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 		calculate_inf_sup_constant2(gq, lq)
 	if not silent:
 		print "creating bases"
-	dontusetestlimit = testlimit is None
+	#Basisgenerierung:
 	bases = {}
 	for space in gq["spaces"]:
 		ldict = lq[space]
+		#Basis mit Shift-Lösung initialisieren:
 		if transfer == 'dirichlet':
 			lsol = ldict["local_solution_dirichlet"]
 		else: 
@@ -35,9 +37,10 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 		else: 
 			transop = ldict["robin_transfer"]
 
-		if dontusetestlimit:		
-			testlimit = calculate_testlimit(gq, lq, space, num_testvecs, target_accuracy, max_failure_probability)	
+		#testlimit berechnen:
+		testlimit = calculate_testlimit(gq, lq, space, num_testvecs, target_accuracy, max_failure_probability)	
 	
+		#Generierung der Testvektoren:
 		testvecs = transop.apply(NumpyVectorArray(np.random.normal(size=transop.source.dim)))
 		for i in range(num_testvecs-1):
 			testvecs.append(transop.apply(NumpyVectorArray(np.random.normal(size=(1, transop.source.dim)))))
@@ -47,12 +50,17 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 		while (maxnorm > testlimit and progress > 1e-16):
 			if (progress <0):
 				raise Exception
+			#normalverteilter Zufallsvektor r:
 			vec = np.random.normal(size=(1,transop.source.dim))+1j*np.random.normal(size=(1,transop.source.dim))
+			#u_t = T(r)
 			u_t = transop.apply(NumpyVectorArray(vec))
 			basis_length = len(basis)
+			#B <- B+T(r)
 			basis.append(u_t)
+			#orthonormalisieren
 			gram_schmidt(basis, offset=basis_length, product = product, copy = False)
 			B = basis._array.T
+			#M <- t- P_span(B) t /t in M
 			testvecs._array -= B.dot(B.conj().T.dot(product._matrix.dot(testvecs._array.T))).T
         		maxnorm_new = np.max(np.abs(norm(testvecs)))
 			progress = maxnorm-maxnorm_new
@@ -60,8 +68,51 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 			#print "Maxnorm: ", maxnorm
 		#print "Basisgroesse: ", len(basis)
 		bases[space] = basis
+
+	#Fuer den Fall beta_tilde /= beta_h (vgl. S. 45):
+	print "inf-sup Konstante wird neu berechnet"
+	inf_sup_old = gq["inf_sup_constant"].copy()
+	inf_sup_new = calculate_inf_sup_constant(gq,lq,bases)
+	if np.abs((inf_sup_old-inf_sup_new)/inf_sup_old) > 1e-4:	
+		testlimit = calculate_testlimit(gq, lq, space, num_testvecs, target_accuracy, max_failure_probability)
+		for space in gq["spaces"]:
+			ldict = lq[space]
+			basis = bases[space]
+			product = ldict["range_product"]
+			norm = induced_norm(product)
+			if transfer == 'dirichlet':
+				transop = ldict["dirichlet_transfer"]
+			else: 
+				transop = ldict["robin_transfer"]
+			testvecs = transop.apply(NumpyVectorArray(np.random.normal(size=transop.source.dim)))
+			for i in range(num_testvecs-1):
+				testvecs.append(transop.apply(NumpyVectorArray(np.random.normal(size=(1, transop.source.dim)))))
+			B = basis._array.T
+			testvecs._array -= B.dot(B.conj().T.dot(product._matrix.dot(testvecs._array.T))).T
+			maxnorm = np.max(np.abs(norm(testvecs)))
+			progress = 1.
+			while (maxnorm > testlimit and progress > 1e-16):
+				print "Basis nochmal erweitern"
+				import ipdb
+				ipdb.set_trace()
+				if (progress <0):
+					raise Exception
+				vec = np.random.normal(size=(1,transop.source.dim))+1j*np.random.normal(size=(1,transop.source.dim))
+				u_t = transop.apply(NumpyVectorArray(vec))
+				basis_length = len(basis)
+				basis.append(u_t)
+				gram_schmidt(basis, offset=basis_length, product = product, copy = False)
+				B = basis._array.T
+				testvecs._array -= B.dot(B.conj().T.dot(product._matrix.dot(testvecs._array.T))).T
+				maxnorm_new = np.max(np.abs(norm(testvecs)))
+				progress = maxnorm-maxnorm_new
+				maxnorm = maxnorm_new
+				#print "Maxnorm: ", maxnorm
+			#print "Basisgroesse: ", len(basis)
+			bases[space] = basis
 	return bases
 
+#nicht-adaptive Basiserstellung (Algorithmus 4):
 def create_bases2(gq, lq, basis_size, transfer = 'dirichlet', silent = True):
 	#Basiserstellung mit Basisgroesse
 	if not silent:
@@ -69,6 +120,7 @@ def create_bases2(gq, lq, basis_size, transfer = 'dirichlet', silent = True):
 	bases = {}
 	for space in gq["spaces"]:
 		ldict = lq[space]
+		#Basis mit Shift-Lösung initialisieren:
 		if transfer == 'dirichlet':
 			lsol = ldict["local_solution_dirichlet"]
 		else: 
@@ -81,14 +133,18 @@ def create_bases2(gq, lq, basis_size, transfer = 'dirichlet', silent = True):
 		else: 
 			transop = ldict["robin_transfer"]
 		for i in range(basis_size):
-			vec = np.random.normal(size=(1,transop.source.dim))+1j*np.random.normal(size=(1,transop.source.dim))
+			#normalverteilter Zufallsvektor r:
+			vec = np.random.normal(size=(1,transop.source.dim))+1j*np.random.normal(size=(1,transop.source.dim))	
 			u_t = transop.apply(NumpyVectorArray(vec))
 			basis_length = len(basis)
+			#B <- B + T(r)
 			basis.append(u_t)
+			#orthonormalisieren
 			gram_schmidt(basis, offset=basis_length, product = product, copy = False)
 		bases[space] = basis
 	return bases
 
+#Berechne reduzierte Lösung anhand gegebener Basis:
 def reconstruct_solution(gq, lq, bases, silent = True):
 	if not silent:
 		print "reconstructing solution"	
