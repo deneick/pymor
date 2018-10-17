@@ -29,7 +29,7 @@ def calculate_lambda_min(gq, lq):
 		#print "calculated lambda_min: ", val
 	print "calculated all lambdas"
 
-#Berechne inf-sup Konstante tilde_beta bezüglich des reduzierten Systems (vgl. S.9):
+#Berechne inf-sup Konstante tilde_beta bezueglich des reduzierten Systems (vgl. S.9):
 def calculate_inf_sup_constant(gq,lq, bases):#, mus):
 	op = gq["op_fixed"]
 	#op = gq["op_fixed_not_assembled"].assemble(mus)
@@ -60,7 +60,7 @@ def calculate_inf_sup_constant(gq,lq, bases):#, mus):
 	print "calculated_inf_sup_constant: ", result
 	return result
 
-#Berechne inf-sup Konstante beta_h bezüglich des Finite-Elemente-Raumes (vgl. S.9):
+#Berechne inf-sup Konstante beta_h bezueglich des Finite-Elemente-Raumes (vgl. S.9):
 def calculate_inf_sup_constant2(gq,lq):	
 	op = gq["op"]
 	A = op._matrix

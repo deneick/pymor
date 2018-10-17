@@ -23,7 +23,7 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 	bases = {}
 	for space in gq["spaces"]:
 		ldict = lq[space]
-		#Basis mit Shift-Lösung initialisieren:
+		#Basis mit Shift-Loesung initialisieren:
 		if transfer == 'dirichlet':
 			lsol = ldict["local_solution_dirichlet"]
 		else: 
@@ -120,7 +120,7 @@ def create_bases2(gq, lq, basis_size, transfer = 'dirichlet', silent = True):
 	bases = {}
 	for space in gq["spaces"]:
 		ldict = lq[space]
-		#Basis mit Shift-Lösung initialisieren:
+		#Basis mit Shift-Loesung initialisieren:
 		if transfer == 'dirichlet':
 			lsol = ldict["local_solution_dirichlet"]
 		else: 
@@ -144,7 +144,7 @@ def create_bases2(gq, lq, basis_size, transfer = 'dirichlet', silent = True):
 		bases[space] = basis
 	return bases
 
-#Berechne reduzierte Lösung anhand gegebener Basis:
+#Berechne reduzierte Loesung anhand gegebener Basis:
 def reconstruct_solution(gq, lq, bases, silent = True):
 	if not silent:
 		print "reconstructing solution"	

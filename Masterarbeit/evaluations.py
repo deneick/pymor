@@ -5,7 +5,7 @@ test2 berechnet und visualisiert eine reduzierte Loesung mit dem adaptiven Algor
 
 evaluation berechnet den relativen Fehler abhaengig von der Basisgroesse
 
-ungleichung berechnet den relativen Fehler abhängig von der gegebenen Toleranz bezueglich des adaptiven Algorithmus und die a priori Grenze
+ungleichung berechnet den relativen Fehler abhaengig von der gegebenen Toleranz bezueglich des adaptiven Algorithmus und die a priori Grenze
 
 ungleichungk berechnet den relativen Fehler abhaengig von der Wellenzahl k bezueglich des adaptiven Algorithmus und die a priori Grenze
 
@@ -13,22 +13,22 @@ plotconstants berechnet die inf-sup Konstante und die Stetigkeitskonstante in Ab
 
 kerr berechnet den relativen Fehler abhaengig von der Wellenzahl k mit dem nicht-adaptiven Algorithmus (Alg. 4)
 
-resolution berechnet den relativen Fehler in Abhaengigkeit von der feinen Gitterauflösung mit Alg. 4
+resolution berechnet den relativen Fehler in Abhaengigkeit von der feinen Gitteraufloesung mit Alg. 4
 
 cerr2D berechnet den relativen Fehler abhaengig von c(dem lokalen Robin-Parameter) mit Alg. 4
 
-knerr2D berechnet den relativen Fehler abhaengig von der Wellenzahl k und der Basisgröße n mit Alg. 4
+knerr2D berechnet den relativen Fehler abhaengig von der Wellenzahl k und der Basisgroesse n mit Alg. 4
 
 
 it = Anzahl der Wiederholungen fuer die Statistik
 lim = maximale Basisgroesse
 k = Wellenzahl
 boundary = globale Randbedingung
-save = Speicherort für Daten
+save = Speicherort fuer Daten
 cglob = globaler Robin-Parameter
-cloc = lokaler Robin-Parameter (für Transferoperator)
-resolution = feine Gitterauflösung
-coarse_grid_resolution = grobe Gitterauflösung
+cloc = lokaler Robin-Parameter (fuer Transferoperator)
+resolution = feine Gitteraufloesung
+coarse_grid_resolution = grobe Gitteraufloesung
 """
 
 from problems import *

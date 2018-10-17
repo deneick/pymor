@@ -27,7 +27,7 @@ def create_dirichlet_transfer(localizer, local_op, rhsop, source_space, training
 	rangesize = len(localizer.join_spaces(range_space))
 	return NumpyGenericOperator(transfer, cavesize, rangesize, linear=True)
 
-#Dirichlet-Lösungsoperator
+#Dirichlet-Loesungsoperator
 def create_dirichlet_solop(localizer, local_op, rhsop, source_space, training_space):
 	def solve(va):
 		solution = local_op.apply_inverse(-rhsop.apply(NumpyVectorArray(va)))
@@ -47,7 +47,7 @@ def create_robin_transfer(localizer, bilifo, source_space, omega_star_space, ran
 	rangesize = len(localizer.join_spaces(range_space))
 	return NumpyGenericOperator(transfer, cavesize, rangesize, linear=True)
 
-#Robin-Lösungsoperator
+#Robin-Loesungsoperator
 def create_robin_solop(localizer, bilifo, source_space, omega_star_space):
 	def solve(va):
 		g = localizer.to_space(NumpyVectorArray(va), source_space, omega_star_space)			
@@ -100,7 +100,7 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 	except KeyError:
 		dmask = None
 
-	#Konstruktion der Teilräume:
+	#Konstruktion der Teilraeume:
 	subspaces, subspaces_per_codim = build_subspaces(*partition_any_grid(grid, num_intervals=(coarse_grid_resolution, coarse_grid_resolution), dmask = dmask))
 	global_quantities["subspaces"] = subspaces
 	global_quantities["subspaces_per_codim"] = subspaces_per_codim
@@ -123,7 +123,7 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 			ldict = {}
 			local_quantities[space] = ldict
 		
-			#Konstruktion der lokalen Räume:
+			#Konstruktion der lokalen Raeume:
 			source_space = subspaces[s_id]["cxenv"]
 			ldict["source_space"] = source_space
 			training_space = subspaces[s_id]["xenv"]
