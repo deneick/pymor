@@ -7,10 +7,10 @@ Um den Code auf einem Ubuntu-System ausführen zu können, geben Sie die folgend
 
 
     sudo apt-get install python-pip python-virtualenv python-numpy python-scipy python-pyside cython python-matplotlib python-dev python git python-pil python-progress
-    export PATH_TO_VIRTUALENV=\~/pymor-virtualenv
+    export PATH_TO_VIRTUALENV=~/pymor-virtualenv
     virtualenv --system-site-packages $PATH_TO_VIRTUALENV
     source $PATH_TO_VIRTUALENV/bin/activate
-    export PYMOR_SOURCE_DIR=\~/pymor
+    export PYMOR_SOURCE_DIR=~/pymor
     git clone https://github.com/deneick/pymor $PYMOR_SOURCE_DIR
     cd $PYMOR_SOURCE_DIR
     git checkout Masterarbeit
