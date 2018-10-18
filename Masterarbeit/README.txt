@@ -15,7 +15,7 @@ export PYMOR_SOURCE_DIR=~/pymor
 git clone https://github.com/deneick/pymor $PYMOR_SOURCE_DIR
 cd $PYMOR_SOURCE_DIR
 git checkout Masterarbeit
-echo "$PYMOR_SOURCE_DIR/src" > $PYTHON_ROOT/lib/python2.7/site-packages/pymor.pth
+echo "$PYMOR_SOURCE_DIR/src" > $PATH_TO_VIRTUALENV/lib/python2.7/site-packages/pymor.pth
 python setup.py build_ext --inplace
 
 
