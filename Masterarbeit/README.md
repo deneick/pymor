@@ -21,13 +21,15 @@ Um den Code auf einem Ubuntu-System ausführen zu können, geben Sie die folgend
 Um die Abbildungen zu reproduzieren, geben sie den entsprechenden python-Befehl in die Kommandozentrale ein (Die Ergebnisse werden dann mit matplotlib visualisiert und sind im Ordner dats als .dat Dateien):
 
 Abbildung 1:
-python 1_loesung_bsp1.py
+
+    python 1_loesung_bsp1.py
 
 Abbildung 2:
-python 2_loesung_bsp2.py
+
+    python 2_loesung_bsp2.py
 
 Abbildung 3:
-python 3_loesung_bsp3.py
+    python 3_loesung_bsp3.py
 
 Abbildung 5:
 python 5_FineGridResolution_a.py
