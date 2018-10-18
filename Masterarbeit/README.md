@@ -29,69 +29,85 @@ Abbildung 2:
     python 2_loesung_bsp2.py
 
 Abbildung 3:
+
     python 3_loesung_bsp3.py
 
 Abbildung 5:
-python 5_FineGridResolution_a.py
-python 5_FineGridResolution_b.py
-python 5_FineGridResolution_c.py
+
+    python 5_FineGridResolution_a.py
+    python 5_FineGridResolution_b.py
+    python 5_FineGridResolution_c.py
 
 Abbildung 6:
-python 17_cerr_a.py
-python 18_cerr_a.py
+
+    python 17_cerr_a.py
+    python 18_cerr_a.py
 
 Abbildung 8:
-python 8_n_err_a.py
-python 8_n_err_b.py
-python 8_n_err_c.py
+
+    python 8_n_err_a.py
+    python 8_n_err_b.py
+    python 8_n_err_c.py
 
 Abbildung 9:
-python 9_kerr_a.py
-python 9_kerr_b.py
-python 9_kerr_c.py
+
+    python 9_kerr_a.py
+    python 9_kerr_b.py
+    python 9_kerr_c.py
 
 Abbildung 10:
-python 10_k_n_err_a.py
-python 10_k_n_err_b.py
-python 10_k_n_err_c.py
+
+    python 10_k_n_err_a.py
+    python 10_k_n_err_b.py
+    python 10_k_n_err_c.py
 
 Abbildung 11:
-python 11_singularvalues.py
+
+    python 11_singularvalues.py
 
 Abbildung 12:
-python 12_constants.py
+
+    python 12_constants.py
 
 Abbildung 13:
-python 13_kerr_adapt.py
+
+    python 13_kerr_adapt.py
 
 Abbildung 14:
-python 14_tolglob_err.py
+
+    python 14_tolglob_err.py
 
 Abbildung 16:
-python 16_cerr_h_a.py
-python 16_cerr_h_b.py
+
+    python 16_cerr_h_a.py
+    python 16_cerr_h_b.py
 
 Abbildung 17:
-python 17_cerr_a.py
-python 17_cerr_b.py
-python 17_cerr_c.py
+
+    python 17_cerr_a.py
+    python 17_cerr_b.py
+    python 17_cerr_c.py
 
 Abbildung 18:
-python 18_cerr_a.py
-python 18_cerr_b.py
-python 18_cerr_c.py
+
+    python 18_cerr_a.py
+    python 18_cerr_b.py
+    python 18_cerr_c.py
 
 Abbildung 19:
-python 19_cerr_a.py
-python 19_cerr_b.py
-python 19_cerr_c.py
+
+    python 19_cerr_a.py
+    python 19_cerr_b.py
+    python 19_cerr_c.py
 
 Abbildung 20:
-python 20_cerr_a.py
-python 20_cerr_b.py
-python 20_cerr_c.py
+    
+    python 20_cerr_a.py
+    python 20_cerr_b.py
+    python 20_cerr_c.py
 
 Abbildung 21:
-python 21_cerr_a.py
-python 21_cerr_b.py
-python 21_cerr_c.py
+
+    python 21_cerr_a.py
+    python 21_cerr_b.py
+    python 21_cerr_c.py
