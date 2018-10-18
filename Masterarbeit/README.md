@@ -6,15 +6,14 @@ von Dennis Eickhorn
 Um den Code auf einem Ubuntu-System ausführen zu können, geben Sie die folgenden Zeilen in eine Kommandozeile ein:
 
 sudo apt-get install python-pip python-virtualenv python-numpy python-scipy python-pyside cython python-matplotlib python-dev python git python-pil python-progress
-export PATH_TO_VIRTUALENV=~/pymor-virtualenv
-virtualenv --system-site-packages $PATH_TO_VIRTUALENV
-source $PATH_TO_VIRTUALENV/bin/activate
-pip install git+https://github.com/pymor/pymor.git@0.4.x
-pip install git+https://github.com/sdrave/simdb.git@143d6b9f9f5b7bf55ab2bf56d3cb19166cc1abcb
-pip install scipy==1.0.0
-export SIMDB_PATH=~/pymor-simdb
 
-export PYMOR_SOURCE_DIR=~/pymor
+export PATH_TO_VIRTUALENV=\~/pymor-virtualenv
+
+virtualenv --system-site-packages $PATH_TO_VIRTUALENV
+
+source $PATH_TO_VIRTUALENV/bin/activate
+
+export PYMOR_SOURCE_DIR=\~/pymor
 git clone https://github.com/deneick/pymor $PYMOR_SOURCE_DIR
 cd $PYMOR_SOURCE_DIR
 git checkout Masterarbeit
