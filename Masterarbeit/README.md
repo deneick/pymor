@@ -5,6 +5,9 @@ von Dennis Eickhorn
 
 Um den Code auf einem Ubuntu-System ausführen zu können, geben Sie die folgenden Zeilen in eine Kommandozeile ein:
 
+
+
+
 sudo apt-get install python-pip python-virtualenv python-numpy python-scipy python-pyside cython python-matplotlib python-dev python git python-pil python-progress
 
 export PATH_TO_VIRTUALENV=\~/pymor-virtualenv
@@ -14,11 +17,19 @@ virtualenv --system-site-packages $PATH_TO_VIRTUALENV
 source $PATH_TO_VIRTUALENV/bin/activate
 
 export PYMOR_SOURCE_DIR=\~/pymor
+
 git clone https://github.com/deneick/pymor $PYMOR_SOURCE_DIR
+
 cd $PYMOR_SOURCE_DIR
+
 git checkout Masterarbeit
+
 echo "$PYMOR_SOURCE_DIR/src" > $PYTHON_ROOT/lib/python2.7/site-packages/pymor.pth
+
 python setup.py build_ext --inplace
+
+
+
 
 
 Um die Abbildungen zu reproduzieren, geben sie den entsprechenden python-Befehl in die Kommandozentrale ein (Die Ergebnisse werden dann mit matplotlib visualisiert und sind im Ordner dats als .dat Dateien):
