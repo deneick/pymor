@@ -6,7 +6,7 @@ von Dennis Eickhorn
 Um den Code auf einem Ubuntu-System ausführen zu können, geben Sie die folgenden Zeilen in eine Kommandozeile ein:
 
 
-\\
+\
 
 sudo apt-get install python-pip python-virtualenv python-numpy python-scipy python-pyside cython python-matplotlib python-dev python git python-pil python-progress
 
@@ -29,7 +29,7 @@ echo "$PYMOR_SOURCE_DIR/src" > $PYTHON_ROOT/lib/python2.7/site-packages/pymor.pt
 python setup.py build_ext --inplace
 
 
-\\
+\
 
 
 Um die Abbildungen zu reproduzieren, geben sie den entsprechenden python-Befehl in die Kommandozentrale ein (Die Ergebnisse werden dann mit matplotlib visualisiert und sind im Ordner dats als .dat Dateien):
