@@ -1,10 +1,12 @@
+from evaluations import *
+
 it = 100
 n = 15
-boundary = 'dirichlet'
-cloc0 = 1
-cloc1 = -0.03
-cloc2 = 0.014
-rang = np.arange(0.1,10.1,1.)
+boundary = 'robin'
+cloc0 = 0
+cloc1 = 0.02*(5-1j)
+cloc2 = 0.0016*(8-1j)
+rang = np.arange(0.1,10.1,.1)
 resolution = 100
 coarse_grid_resolution = 10
 
@@ -42,10 +44,10 @@ means_r = np.mean(err_r, axis = 1)
 limits = [0, 25, 50, 75, 100]
 
 percentiles_dirichlet_h1 = np.array(np.percentile(err_d, limits, axis=1))
-percentiles_robin_h1 = np.array(np.percentile(err_h, limits, axis=1))
+percentiles_robin_h1 = np.array(np.percentile(err_r, limits, axis=1))
 
 data = np.vstack([rang, percentiles_dirichlet_h1, percentiles_robin_h1]).T
-open("dats/kerrper.dat", "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
+open("dats/kerrper1.dat", "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
 
 """
 from matplotlib import pyplot as plt
