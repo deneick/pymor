@@ -99,6 +99,7 @@ def ungleichung(it, k, boundary, save, cglob = 0, cloc = 0, returnvals=False, re
 	calculate_continuity_constant(gq, lq)
 	calculate_inf_sup_constant2(gq, lq)
 	calculate_lambda_min(gq, lq)	
+	calculate_csis(gq,lq)
 	d = gq["d"]
 	u = d.solve(mus)
 	tols = np.logspace(-10,5,16)	
@@ -148,7 +149,8 @@ def ungleichungk(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), cloc
 		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calT = True, calQ = True)
 		calculate_continuity_constant(gq, lq)
 		calculate_inf_sup_constant2(gq, lq)	
-		calculate_lambda_min(gq, lq)	
+		calculate_lambda_min(gq, lq)
+		calculate_csis(gq,lq)	
 		d = gq["d"]
 		u = d.solve(mus)
 		for j in range(it):
