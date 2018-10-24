@@ -107,11 +107,11 @@ def ungleichung(it, k, boundary, save, cglob = 0, cloc = 0, returnvals=False, re
 	RS2 = []
 	for tol in tols:
 		print tol
+		ls = []
+		rs2 = []
 		for j in range(it):
 			print j,
 			sys.stdout.flush()
-			ls = []
-			rs2 = []
 			bases = create_bases(gq, lq, num_testvecs=20, transfer = 'robin', target_accuracy = tol, calC = False)
 			rssum2 = 0
 			for space in gq["spaces"]:
@@ -137,6 +137,34 @@ def ungleichung(it, k, boundary, save, cglob = 0, cloc = 0, returnvals=False, re
 	if returnvals:
 		return [tols, means_ls, means_rs2]
 
+def ungleichung2(it, k, boundary, save, cglob = 0, cloc = 0, returnvals=False, resolution = 200, coarse_grid_resolution = 10):
+	p = helmholtz(boundary = boundary)
+	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calT = True, calQ = True)
+	calculate_continuity_constant(gq, lq)
+	calculate_inf_sup_constant2(gq, lq)
+	calculate_lambda_min(gq, lq)	
+	calculate_csis(gq,lq)
+	d = gq["d"]
+	u = d.solve(mus)
+	tols = np.logspace(-10,5,16)	
+	LS = []
+	for tol in tols:
+		print tol
+		ls = []
+		for j in range(it):
+			print j,
+			sys.stdout.flush()
+			bases = create_bases(gq, lq, num_testvecs=20, transfer = 'robin', target_accuracy = tol, calC = False)
+			ru = reconstruct_solution(gq,lq,bases)
+			ls.append(d.h1_norm(u-ru)[0]/d.h1_norm(u)[0])
+		LS.append(ls)
+	means_ls = np.mean(LS, axis = 1)
+	data = np.vstack([tols, means_ls]).T
+	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
+	if returnvals:
+		return [tols, means_ls]
+
 def ungleichungk(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), cloc0 = 0, cloc1 = 1, cloc2 = 1, returnvals=False, resolution = 100, coarse_grid_resolution = 10):
 	p = helmholtz(boundary = boundary)	
 	LS = []
@@ -153,11 +181,11 @@ def ungleichungk(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), cloc
 		calculate_csis(gq,lq)	
 		d = gq["d"]
 		u = d.solve(mus)
+		ls = []
+		rs2 = []
 		for j in range(it):
 			print j,
 			sys.stdout.flush()
-			ls = []
-			rs2 = []
 			bases = create_bases(gq, lq, num_testvecs=20, transfer = 'robin', target_accuracy = acc, calC = False)
 			rssum2 = 0
 			for space in gq["spaces"]:
@@ -182,6 +210,35 @@ def ungleichungk(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), cloc
 	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
 	if returnvals:
 		return [krang, means_ls, means_rs2]
+
+def ungleichungk2(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), cloc0 = 0, cloc1 = 1, cloc2 = 1, returnvals=False, resolution = 100, coarse_grid_resolution = 10):
+	p = helmholtz(boundary = boundary)	
+	LS = []
+	for k in krang:
+		print k
+		cglob = -1j*k
+		cloc = cloc0+ cloc1*k+cloc2*k**2
+		mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calT = True, calQ = True)
+		calculate_continuity_constant(gq, lq)
+		calculate_inf_sup_constant2(gq, lq)	
+		calculate_lambda_min(gq, lq)
+		calculate_csis(gq,lq)	
+		d = gq["d"]
+		u = d.solve(mus)
+		ls = []
+		for j in range(it):
+			print j,
+			sys.stdout.flush()
+			bases = create_bases(gq, lq, num_testvecs=20, transfer = 'robin', target_accuracy = acc, calC = False)
+			ru = reconstruct_solution(gq,lq,bases)
+			ls.append(d.h1_norm(u-ru)[0]/d.h1_norm(u)[0])
+		LS.append(ls)
+	means_ls = np.mean(LS, axis = 1)
+	data = np.vstack([krang, means_ls]).T
+	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
+	if returnvals:
+		return [krang, means_ls]
 
 def plotconstants(boundary, save, cloc0 = 0, cloc1 = 1, cloc2 = 1, resolution = 50, coarse_grid_resolution = 10, returnvals = False):
 	p = helmholtz(boundary = boundary)
