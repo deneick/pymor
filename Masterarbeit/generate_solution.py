@@ -74,7 +74,7 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 	print "inf-sup Konstante wird neu berechnet"
 	inf_sup_old = gq["inf_sup_constant"].copy()
 	inf_sup_new = calculate_inf_sup_constant(gq,lq,bases)
-	if np.abs((inf_sup_old-inf_sup_new)/inf_sup_old) > 1e-4:	
+	if np.abs((inf_sup_old-inf_sup_new)/inf_sup_old) > 1e-2:	
 		testlimit = calculate_testlimit(gq, lq, space, num_testvecs, target_accuracy, max_failure_probability)
 		for space in gq["spaces"]:
 			ldict = lq[space]
@@ -94,8 +94,8 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 			progress = 1.
 			while (maxnorm > testlimit and progress > 1e-16):
 				print "Basis nochmal erweitern"
-				import ipdb
-				ipdb.set_trace()
+				#import ipdb
+				#ipdb.set_trace()
 				if (progress <0):
 					raise Exception
 				vec = np.random.normal(size=(1,transop.source.dim))+1j*np.random.normal(size=(1,transop.source.dim))
