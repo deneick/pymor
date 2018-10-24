@@ -69,6 +69,7 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 			#print "Maxnorm: ", maxnorm
 		#print "Basisgroesse: ", len(basis)
 		bases[space] = basis
+	return bases
 """
 	#Fuer den Fall beta_tilde /= beta_h (vgl. S. 45):
 	print "inf-sup Konstante wird neu berechnet"
@@ -111,8 +112,8 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 				#print "Maxnorm: ", maxnorm
 			#print "Basisgroesse: ", len(basis)
 			bases[space] = basis
-"""
 	return bases
+"""
 
 #nicht-adaptive Basiserstellung (Algorithmus 4):
 def create_bases2(gq, lq, basis_size, transfer = 'dirichlet', silent = True):
