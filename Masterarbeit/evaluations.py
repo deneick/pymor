@@ -140,7 +140,7 @@ def ungleichung(it, k, boundary, save, cglob = 0, cloc = 0, returnvals=False, re
 def ungleichung2(it, k, boundary, save, cglob = 0, cloc = 0, returnvals=False, resolution = 200, coarse_grid_resolution = 10):
 	p = helmholtz(boundary = boundary)
 	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
-	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calT = True, calQ = True)
+	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calQ = True)
 	calculate_continuity_constant(gq, lq)
 	calculate_inf_sup_constant2(gq, lq)
 	calculate_lambda_min(gq, lq)	
@@ -219,7 +219,7 @@ def ungleichungk2(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), clo
 		cglob = -1j*k
 		cloc = cloc0+ cloc1*k+cloc2*k**2
 		mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
-		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calT = True, calQ = True)
+		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calQ = True)
 		calculate_continuity_constant(gq, lq)
 		calculate_inf_sup_constant2(gq, lq)	
 		calculate_lambda_min(gq, lq)
