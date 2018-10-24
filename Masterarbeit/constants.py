@@ -125,6 +125,26 @@ def calculate_continuity_constant(gq, lq):#, mus):
 	print "calculated_continuity_constant: ", result
 	return result
 
+def calculate_csis(gq, lq):
+	spaces = gq["spaces"]
+	for space in spaces:
+		ldict = lq[space]
+		T = ldict["solution_matrix_robin"]
+		u_s = ldict["local_sol2"]
+		product = ldict["omega_star_h1_product"]
+		norm = induced_norm(product)
+		if norm(u_s).real < 1e-14: 
+			result = 1
+		else:
+			x = np.linalg.lstsq(T, u_s.data.T)[0]
+			y = T.dot(x)
+			y_p = NumpyVectorArray(y.T)
+			y_p = y_p.lincomb(1/norm(y_p).real)
+			result = np.sqrt(norm(u_s).real[0]**2/(norm(u_s).real[0]**2 - product.apply2(u_s, y_p).real[0][0]**2))
+		ldict["csi"] = result
+	print "calculated csis"
+			
+
 #Berechne Testlimit (vgl. Alg 2):
 def testlimit(failure_tolerance, dim_S, dim_R, num_testvecs, target_error, lambda_min):
 	"""
@@ -141,7 +161,7 @@ def testlimit(failure_tolerance, dim_S, dim_R, num_testvecs, target_error, lambd
 def calculate_testlimit(gq, lq, space, num_testvecs, target_accuracy, max_failure_probability = 1e-15):
 	ldict = lq[space]
 	coarse_grid_resolution = gq["coarse_grid_resolution"]
-	tol_i = target_accuracy*gq["inf_sup_constant"]/( (coarse_grid_resolution -1) *4 * gq["continuity_constant"]) 
+	tol_i = target_accuracy*gq["inf_sup_constant"]/( (coarse_grid_resolution -1) *4 * gq["continuity_constant"]) / ldict["csi"]
 	#print "tol_i: ", tol_i
 	local_failure_tolerance = max_failure_probability / ( (coarse_grid_resolution -1)*4. )
 	testlimit_zeta = testlimit(

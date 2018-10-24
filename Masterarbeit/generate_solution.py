@@ -17,6 +17,7 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 		#calculate_Psi_norm(gq,lq)
 		calculate_continuity_constant(gq, lq)
 		calculate_inf_sup_constant2(gq, lq)
+		calculate_csis(gq,lq)
 	if not silent:
 		print "creating bases"
 	#Basisgenerierung:

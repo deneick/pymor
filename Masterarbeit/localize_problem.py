@@ -175,9 +175,10 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 			llrhs = NumpyMatrixOperator(lrhs._matrix[:,lvecext.astype(int)])
 			lrhs_f = llrhs._matrix
 			local_solution = StationaryDiscretization(bilifo, llrhs, cache_region=None).solve()
+			ldict["local_sol2"] = local_solution
 			local_solution = localizer.to_space(local_solution, omega_star_space, range_space)
 			local_solution_pou = pou[range_space](local_solution)
-			ldict["local_solution_robin"] = local_solution_pou #klappt nicht fuer g!=0 !!
+			ldict["local_solution_robin"] = local_solution_pou 
 
 			if calT:
 				#Transfer-Matrix:
@@ -221,7 +222,7 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 			range_l2 = localizer.localize_operator(full_l2_product, range_space, range_space)
 			range_h1 = localizer.localize_operator(full_h1_product, range_space, range_space)
 
-			ldict["omega_star_energy_product"] = omegastar_h1_product
+			ldict["omega_star_h1_product"] = omegastar_h1_product
 			ldict["range_product"] = range_h1
 
 	return global_quantities, local_quantities
