@@ -6,7 +6,7 @@ boundary = 'robin'
 cloc0 = 0
 cloc1 = 0.02*(5-1j)
 cloc2 = 0.0016*(8-1j)
-rang = np.arange(0.1,10.1,.1)
+rang = np.arange(0.2,10.2,.2)
 resolution = 100
 coarse_grid_resolution = 10
 

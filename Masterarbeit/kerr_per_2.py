@@ -6,7 +6,7 @@ boundary = 'dirichlet'
 cloc0 = 1
 cloc1 = -0.03
 cloc2 = 0.014
-rang = np.arange(0.1,10.1,.1)
+rang = np.arange(0.2,10.2,.2)
 resolution = 100
 coarse_grid_resolution = 10
 
