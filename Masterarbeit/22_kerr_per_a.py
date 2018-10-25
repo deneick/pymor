@@ -49,7 +49,6 @@ percentiles_robin_h1 = np.array(np.percentile(err_r, limits, axis=1))
 data = np.vstack([rang, percentiles_dirichlet_h1, percentiles_robin_h1]).T
 open("dats/kerrper1.dat", "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
 
-"""
 from matplotlib import pyplot as plt
 plt.figure()
 plt.semilogy(rang, means_r, label = "robin")
@@ -57,4 +56,3 @@ plt.semilogy(rang, means_d, label = "dirichlet")
 plt.xlabel('k')
 plt.legend(loc='upper right')
 plt.show()
-"""

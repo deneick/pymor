@@ -19,7 +19,7 @@ echo "$PYMOR_SOURCE_DIR/src" > $PATH_TO_VIRTUALENV/lib/python2.7/site-packages/p
 python setup.py build_ext --inplace
 
 
-Um die Abbildungen zu reproduzieren, geben sie den entsprechenden python-Befehl in die Kommandozentrale ein (Die Ergebnisse werden dann mit matplotlib visualisiert und sind im Ordner dats als .dat Dateien):
+Um die Abbildungen zu reproduzieren, geben Sie den entsprechenden python-Befehl in die Kommandozentrale ein (Die Ergebnisse werden dann mit matplotlib visualisiert und sind im Ordner dats als .dat Dateien):
 
 Abbildung 1:
 python 1_loesung_bsp1.py
@@ -94,3 +94,9 @@ Abbildung 21:
 python 21_cerr_a.py
 python 21_cerr_b.py
 python 21_cerr_c.py
+
+Abbildung 22:
+
+python 22_kerr_per_a.py
+python 22_kerr_per_b.py
+python 22_kerr_per_c.py

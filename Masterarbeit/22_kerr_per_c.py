@@ -2,10 +2,10 @@ from evaluations import *
 
 it = 100
 n = 15
-boundary = 'dirichlet'
-cloc0 = 1
-cloc1 = -0.03
-cloc2 = 0.014
+boundary = 'neumann'
+cloc0 =0
+cloc1 = 0.2
+cloc2 = 0.01
 rang = np.arange(0.2,10.2,.2)
 resolution = 100
 coarse_grid_resolution = 10
@@ -47,9 +47,8 @@ percentiles_dirichlet_h1 = np.array(np.percentile(err_d, limits, axis=1))
 percentiles_robin_h1 = np.array(np.percentile(err_r, limits, axis=1))
 
 data = np.vstack([rang, percentiles_dirichlet_h1, percentiles_robin_h1]).T
-open("dats/kerrper2.dat", "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
+open("dats/kerrper3.dat", "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
 
-"""
 from matplotlib import pyplot as plt
 plt.figure()
 plt.semilogy(rang, means_r, label = "robin")
@@ -57,4 +56,3 @@ plt.semilogy(rang, means_d, label = "dirichlet")
 plt.xlabel('k')
 plt.legend(loc='upper right')
 plt.show()
-"""
