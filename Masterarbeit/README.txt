@@ -17,6 +17,7 @@ cd $PYMOR_SOURCE_DIR
 git checkout Masterarbeit
 echo "$PYMOR_SOURCE_DIR/src" > $PATH_TO_VIRTUALENV/lib/python2.7/site-packages/pymor.pth
 python setup.py build_ext --inplace
+cd Masterarbeit
 
 
 Um die Abbildungen zu reproduzieren, geben Sie den entsprechenden python-Befehl in die Kommandozentrale ein (Die Ergebnisse werden dann mit matplotlib visualisiert und sind im Ordner dats als .dat Dateien):
