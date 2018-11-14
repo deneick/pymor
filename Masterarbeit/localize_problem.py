@@ -5,7 +5,7 @@ from discrete_pou import *
 from pymor.discretizers.elliptic import discretize_elliptic_cg
 from pymor.discretizations.basic import StationaryDiscretization
 from pymor.operators.numpy import NumpyGenericOperator
-#from pymor.operators.constructions import induced_norm, LincombOperator
+from pymor.operators.constructions import LincombOperator
 from pymor.grids.subgrid import SubGrid
 from pymor.grids.boundaryinfos import SubGridBoundaryInfo
 from pymor.domaindescriptions.boundarytypes import BoundaryType
@@ -111,10 +111,9 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 	global_quantities["spaces"] = spaces
 
 	full_l2_product = d.products["l2"].assemble()
-	full_h1_product = d.products["h1"].assemble()
-	global_quantities["h1_prod"] = full_h1_product
-	full_h1_0_product = d.products["h1_0"].assemble()
-	global_quantities["h1_0_prod"] = full_h1_0_product
+	full_h1_semi_product = d.products["h1_semi"].assemble()
+	k_product = LincombOperator((full_h1_semi_product,full_l2_product),(1,mus["k"]**2)).assemble()
+	global_quantities["k_product"] = k_product
 	for xpos in range(coarse_grid_resolution-1):
 		for ypos in range(coarse_grid_resolution-1):
 			#print "localizing..."
@@ -191,6 +190,13 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 					T_robin.T[i] = ti._array
 				ldict["transfer_matrix_robin"] = T_robin
 
+			#Konstruktion der Produkte:
+			range_k = localizer.localize_operator(k_product, range_space, range_space)
+			omstar_k = localizer.localize_operator(k_product, omega_star_space, omega_star_space)
+
+			ldict["omega_star_k_product"] = omstar_k
+			ldict["range_product"] = range_k
+
 			if calQ:
 				#Loesungs-Matrix:
 				solution_op_robin = create_robin_solop(localizer, bilifo, source_space, omega_star_space)		
@@ -202,28 +208,8 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 					qi = solution_op_robin.apply(ei)
 					Q_r.T[i] = qi._array
 				ldict["solution_matrix_robin"] = Q_r
-				omstarh1 = ld.products["h1"].assemble()._matrix[:,lvecext][lvecext,:]
-				source_Q_r_product = NumpyMatrixOperator(Q_r.T.conj().dot(omstarh1.dot(Q_r)))
+				source_Q_r_product = NumpyMatrixOperator(Q_r.T.conj().dot(omstar_k._matrix.dot(Q_r)))
 				ldict["source_product"] = source_Q_r_product
-
-			#Konstruktion der Produkte:
-			omstarh1 = ld.products["h1"].assemble()._matrix[:,lvecext][lvecext,:]
-			omegastar_h1_product = NumpyMatrixOperator(omstarh1)
-			
-			lproduct = localizer.localize_operator(full_l2_product, source_space, source_space)
-			lmat = lproduct._matrix.tocoo()
-			lmat.data = np.array([4./6.*diameter if (row == col) else diameter/6. for row, col in izip(lmat.row, lmat.col)])
-			source_l2_product = NumpyMatrixOperator(lmat.tocsc())
-			ldict["source_product2"] = source_l2_product
-			
-			training_h1 = localizer.localize_operator(full_h1_product, training_space, training_space)._matrix
-			training_h1 = scipy.sparse.csr_matrix(training_h1)			
-
-			range_l2 = localizer.localize_operator(full_l2_product, range_space, range_space)
-			range_h1 = localizer.localize_operator(full_h1_product, range_space, range_space)
-
-			ldict["omega_star_h1_product"] = omegastar_h1_product
-			ldict["range_product"] = range_h1
 
 	return global_quantities, local_quantities
 
