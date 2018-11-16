@@ -193,7 +193,8 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 
 			#Konstruktion der Produkte:
 			range_k = localizer.localize_operator(k_product, range_space, range_space)
-			omstar_k = localizer.localize_operator(k_product, omega_star_space, omega_star_space)
+			omstar_k = LincombOperator((NumpyMatrixOperator(ld.products["h1_semi"].assemble()._matrix[:,lvecext][lvecext,:]),NumpyMatrixOperator(ld.products["l2"].assemble()._matrix[:,lvecext][lvecext,:])),(1,mus["k"]**2)).assemble()
+
 
 			ldict["omega_star_product"] = omstar_k
 			ldict["range_product"] = range_k
