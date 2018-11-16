@@ -211,7 +211,7 @@ def ungleichungk(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), cloc
 	if returnvals:
 		return [krang, means_ls, means_rs2]
 
-def ungleichungk2(it, acc, boundary, save, krang  = np.arange(0.1,10.1,1.0), cloc0 = 0, cloc1 = 1, cloc2 = 1, returnvals=False, resolution = 100, coarse_grid_resolution = 10):
+def ungleichungk2(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.2), cloc0 = 0, cloc1 = 1, cloc2 = 1, returnvals=False, resolution = 100, coarse_grid_resolution = 10):
 	p = helmholtz(boundary = boundary)	
 	LS = []
 	for k in krang:
