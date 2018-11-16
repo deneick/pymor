@@ -107,6 +107,7 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 	localizer = NumpyLocalizer(d.solution_space, subspaces['dofs'])
 	global_quantities["localizer"] = localizer
 	pou = localized_pou(subspaces, subspaces_per_codim, localizer, coarse_grid_resolution, grid)
+	global_quantities["pou"] = pou
 	spaces = [subspaces[s_id]["env"] for s_id in subspaces_per_codim[2]]
 	global_quantities["spaces"] = spaces
 
@@ -194,7 +195,7 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 			range_k = localizer.localize_operator(k_product, range_space, range_space)
 			omstar_k = localizer.localize_operator(k_product, omega_star_space, omega_star_space)
 
-			ldict["omega_star_k_product"] = omstar_k
+			ldict["omega_star_product"] = omstar_k
 			ldict["range_product"] = range_k
 
 			if calQ:

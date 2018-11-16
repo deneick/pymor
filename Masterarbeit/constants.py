@@ -129,7 +129,7 @@ def calculate_csis(gq, lq):
 		ldict = lq[space]
 		T = ldict["solution_matrix_robin"]
 		u_s = ldict["local_sol2"]
-		product = ldict["omega_star_k_product"]
+		product = ldict["omega_star_product"]
 		norm = induced_norm(product)
 		if norm(u_s).real < 1e-14: 
 			result = 1
