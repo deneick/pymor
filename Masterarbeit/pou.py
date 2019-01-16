@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def hatfunction(start, peak, end):
+def hatfunction(start, peak, end, maxval = 1):
     """get a hat function
 
     1             /\
@@ -22,12 +22,13 @@ def hatfunction(start, peak, end):
     start = float(start)
     peak = float(peak)
     end = float(end)
+    maxval = float(maxval)
     assert start < peak < end
     assert np.isfinite(peak)
 
     def f(x):
         x = np.array(x)
-        return np.maximum(0,
+        return maxval*np.maximum(0,
                    np.minimum(
                        (x - peak) / (peak - start) + 1,
                        (x - peak) / (peak - end) + 1
@@ -81,9 +82,7 @@ def gen_definitions(boundaries, outer_constant):
         # we need a constant one function
         return [(-float('inf'), 0, float('inf'))]
 
-    return [(boundaries[i], boundaries[i + 1], boundaries[i + 2])
-            for i in range(len(boundaries) - 2)]
-
+    return [(boundaries[i], boundaries[i + 1], boundaries[i + 2]) for i in range(len(boundaries) - 2)]
 
 def partition_of_unity(boundary_lists, outer_constant=True):
     """get a partition of unity

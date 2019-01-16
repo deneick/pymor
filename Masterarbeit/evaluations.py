@@ -32,6 +32,7 @@ coarse_grid_resolution = grobe Gitteraufloesung
 """
 
 from problems import *
+from problems_maxwell import *
 import numpy as np
 import sys
 from pymor.basic import *

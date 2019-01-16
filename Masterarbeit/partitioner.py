@@ -30,8 +30,8 @@ def partition_any_grid(grid, num_intervals=(2,2), codim=2, dmask = None):
             return False
             
     for dofnr, coord in enumerate(grid.centers(codim)):
-	if (not (dmask is None)) and dmask[dofnr]:
-		continue
+#	if (not (dmask is None)) and dmask[dofnr]:
+#		continue
         if on_x0_boundary(coord):
             if on_x1_boundary(coord):
                 vertices[int(np.round((coord[0] - grid.x0_range[0]) / x0_increment) - 1)][int(np.round((coord[1] - grid.x1_range[0]) / x1_increment) - 1)].append(dofnr)

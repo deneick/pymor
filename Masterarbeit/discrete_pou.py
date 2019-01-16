@@ -6,23 +6,23 @@ def discrete_multiply(va, function):
     assert len(function.shape) == 1
     return NumpyVectorArray(va.data * function)
 
-def subspace_multiplication(grid, function, subspace):
-    multiplicationvector = function(grid.centers(2)[subspace])
+def subspace_multiplication(grid, function, subspace, codim):
+    multiplicationvector = function(grid.centers(codim)[subspace])
     def fun(x):
         return discrete_multiply(x, multiplicationvector)
 
     return fun
 
-def localized_pou(subspaces, subspaces_per_codim, localizer, coarse_grid_resolution, grid):
+def localized_pou(subspaces, subspaces_per_codim, localizer, coarse_grid_resolution, grid, localization_codim, dof_codim):
     boundaries_x = np.linspace(grid.domain[0][0], grid.domain[1][0],coarse_grid_resolution+1)
     boundaries_y = np.linspace(grid.domain[0][1], grid.domain[1][1],coarse_grid_resolution+1)
     pou = partition_of_unity((boundaries_x, boundaries_y), True)
 
     result = {}
-    for space_id, fun in zip(subspaces_per_codim[2], pou.flatten()):
+    for space_id, fun in zip(subspaces_per_codim[localization_codim], pou.flatten()):
         space = subspaces[space_id]['env']
         space_dofs = localizer.join_spaces(space)
-        myfunction = subspace_multiplication(grid, fun, space_dofs)
+        myfunction = subspace_multiplication(grid, fun, space_dofs, dof_codim)
         result[space] = myfunction
 
     return result

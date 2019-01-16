@@ -3,6 +3,7 @@ from partitioner import build_subspaces, partition_any_grid
 from pou import *
 from discrete_pou import *
 from pymor.discretizers.elliptic import discretize_elliptic_cg
+from pymor.discretizers.maxwell import *
 from pymor.discretizations.basic import StationaryDiscretization
 from pymor.operators.numpy import NumpyGenericOperator
 #from pymor.operators.constructions import induced_norm, LincombOperator
@@ -57,7 +58,7 @@ def create_robin_solop(localizer, bilifo, source_space, omega_star_space):
 	rangesize = len(localizer.join_spaces(omega_star_space))
 	return NumpyGenericOperator(solve, cavesize, rangesize, linear=True)
 
-def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None, calT = False, calQ = False):
+def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None, calT = False, calQ = False, dof_codim = 2, localization_codim = 2, discretizer = None):
 	print "localizing problem"
 	global_quantities = {}
 	global_quantities["coarse_grid_resolution"] = coarse_grid_resolution
@@ -66,7 +67,9 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 	#Diskretisierung auf dem feinen Gitter:
 	diameter = 1./fine_grid_resolution
 	global_quantities["diameter"] = diameter
-	d, data = discretize_elliptic_cg(p, diameter=diameter)
+	if discretizer is None:
+		discretizer = discretize_elliptic_cg
+	d, data = discretizer(p, diameter=diameter)
 	grid = data["grid"]
 
 	global_quantities["d"] = d
@@ -82,7 +85,7 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 
 	#Skalierung der Dirichlet-Freiheitsgrade:
 	try:
-		dirichlet_dofs = data['boundary_info'].dirichlet_boundaries(2)
+		dirichlet_dofs = data['boundary_info'].dirichlet_boundaries(dof_codim)
 		for op in op_fixed.operators:
 			op.assemble(mus)._matrix[dirichlet_dofs, dirichlet_dofs] *= 1e5
 		#d.rhs.assemble(mus)._matrix[:, dirichlet_dofs] *= 1e5
@@ -96,29 +99,30 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 	global_quantities["p"] = p
 	
 	try: 
-		dmask = data['boundary_info'].dirichlet_mask(2)
+		dmask = data['boundary_info'].dirichlet_mask(dof_codim)
 	except KeyError:
 		dmask = None
 
 	#Konstruktion der Teilraeume:
-	subspaces, subspaces_per_codim = build_subspaces(*partition_any_grid(grid, num_intervals=(coarse_grid_resolution, coarse_grid_resolution), dmask = dmask))
+	subspaces, subspaces_per_codim = build_subspaces(*partition_any_grid(grid, num_intervals=(coarse_grid_resolution, coarse_grid_resolution), dmask = dmask, codim = dof_codim))
 	global_quantities["subspaces"] = subspaces
 	global_quantities["subspaces_per_codim"] = subspaces_per_codim
 	localizer = NumpyLocalizer(d.solution_space, subspaces['dofs'])
 	global_quantities["localizer"] = localizer
-	pou = localized_pou(subspaces, subspaces_per_codim, localizer, coarse_grid_resolution, grid)
-	spaces = [subspaces[s_id]["env"] for s_id in subspaces_per_codim[2]]
+	pou = localized_pou(subspaces, subspaces_per_codim, localizer, coarse_grid_resolution, grid, localization_codim, dof_codim)
+	global_quantities["pou"] = pou
+	spaces = [subspaces[s_id]["env"] for s_id in subspaces_per_codim[localization_codim]]
 	global_quantities["spaces"] = spaces
 
 	full_l2_product = d.products["l2"].assemble()
 	full_h1_product = d.products["h1"].assemble()
 	global_quantities["h1_prod"] = full_h1_product
-	full_h1_0_product = d.products["h1_0"].assemble()
-	global_quantities["h1_0_prod"] = full_h1_0_product
+	#full_h1_0_product = d.products["h1_0"].assemble()
+	#global_quantities["h1_0_prod"] = full_h1_0_product
 	for xpos in range(coarse_grid_resolution-1):
 		for ypos in range(coarse_grid_resolution-1):
 			#print "localizing..."
-			s_id = subspaces_per_codim[2][ypos + xpos*(coarse_grid_resolution-1)]
+			s_id = subspaces_per_codim[localization_codim][ypos + xpos*(coarse_grid_resolution-1)]
 			space = subspaces[s_id]["env"]
 			ldict = {}
 			local_quantities[space] = ldict
@@ -156,13 +160,13 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 			ysize = min(ypos + 3, coarse_grid_resolution - 2 + 3) - ymin
 			mysubgrid = getsubgrid(grid, xmin, ymin, coarse_grid_resolution, xsize=xsize, ysize=ysize)
 			mysubbi = SubGridBoundaryInfo(mysubgrid, grid, data['boundary_info'], BoundaryType('robin'))
-			ld, ldata = discretize_elliptic_cg(p, grid=mysubgrid, boundary_info=mysubbi)
+			ld, ldata = discretizer(p, grid=mysubgrid, boundary_info=mysubbi)
 			lop = ld.operator.assemble(mus)
 
 			#index conversion		
-			ndofsext = len(ldata['grid'].parent_indices(2))
+			ndofsext = len(ldata['grid'].parent_indices(dof_codim))
 			global_dofnrsext = -100000000* np.ones(shape=(d.solution_space.dim,))
-			global_dofnrsext[ldata['grid'].parent_indices(2)] = np.array(range(ndofsext))
+			global_dofnrsext[ldata['grid'].parent_indices(dof_codim)] = np.array(range(ndofsext))
 			lvecext = localizer.localize_vector_array(NumpyVectorArray(global_dofnrsext), omega_star_space).data[0]
 
 			#Robin Transferoperator:
@@ -224,6 +228,22 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 
 			ldict["omega_star_h1_product"] = omegastar_h1_product
 			ldict["range_product"] = range_h1
+
+
+
+
+			mysubgrid = getsubgrid(grid, xpos, ypos, coarse_grid_resolution)
+            		mysubbi = SubGridBoundaryInfo(mysubgrid, grid, data['boundary_info'], BoundaryType('robin'))
+            		ld, ldata = discretizer(p, grid=mysubgrid, boundary_info=mysubbi)
+
+			# do index conversion between localizations
+			ndofs = len(localizer.join_spaces(omega_space))
+			global_dofnrs = -100000000* np.ones(shape=(d.solution_space.dim,))
+			global_dofnrs[ldata['grid'].parent_indices(dof_codim)] = np.array(range(ndofs))
+			lvec = localizer.localize_vector_array(NumpyVectorArray(global_dofnrs), range_space).data[0]
+			omh1 = ld.products["h1"].assemble()._matrix[:,lvec][lvec,:]
+			ldict["omega_product"] = NumpyMatrixOperator(omh1)
+
 
 	return global_quantities, local_quantities
 
