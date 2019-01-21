@@ -7,7 +7,7 @@ rang = np.logspace(-10,10,21)
 it = 20
 
 errs = []
-for cloc in np.logspace(-10,10,31):
+for cloc in rang:
 	print cloc
 	mus = {'c_loc' : cloc, 'k': 1e9*2*np.pi, 'mu': 4*np.pi*1e-7, 'eps': 8.854187817e-12}
 	gq, lq = localize_problem(p, 10, 100, mus, dof_codim = 1, discretizer = discretize_maxwell)
