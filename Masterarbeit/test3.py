@@ -4,6 +4,7 @@ d, data = discretize_maxwell(p, diameter = 1./100)
 mus = {'c_loc' : 0, 'k': 1e9*2*np.pi, 'mu': 4*np.pi*1e-7, 'eps': 8.854187817e-12}
 u = d.solve(mus)
 it = 20
+n=15
 save = "dats/cerr2d_maxwell.dat"
 
 rang = np.logspace(-5,3,25)
