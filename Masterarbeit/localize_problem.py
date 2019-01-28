@@ -110,7 +110,7 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 	localizer = NumpyLocalizer(d.solution_space, subspaces['dofs'])
 	global_quantities["localizer"] = localizer
 
-	pou = localized_pou(subspaces, subspaces_per_codim, localizer, coarse_grid_resolution, grid)
+	pou = localized_pou(subspaces, subspaces_per_codim, localizer, coarse_grid_resolution, grid, localization_codim, dof_codim)
 	global_quantities["pou"] = pou
 	spaces = [subspaces[s_id]["env"] for s_id in subspaces_per_codim[2]]
 	global_quantities["spaces"] = spaces
@@ -216,40 +216,6 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 				ldict["solution_matrix_robin"] = Q_r
 				source_Q_r_product = NumpyMatrixOperator(Q_r.T.conj().dot(omstar_k._matrix.dot(Q_r)))
 				ldict["source_product"] = source_Q_r_product
-
-			#Konstruktion der Produkte:
-			omstarh1 = ld.products["h1"].assemble()._matrix[:,lvecext][lvecext,:]
-			omegastar_h1_product = NumpyMatrixOperator(omstarh1)
-			
-			lproduct = localizer.localize_operator(full_l2_product, source_space, source_space)
-			lmat = lproduct._matrix.tocoo()
-			lmat.data = np.array([4./6.*diameter if (row == col) else diameter/6. for row, col in izip(lmat.row, lmat.col)])
-			source_l2_product = NumpyMatrixOperator(lmat.tocsc())
-			ldict["source_product2"] = source_l2_product
-			
-			training_h1 = localizer.localize_operator(full_h1_product, training_space, training_space)._matrix
-			training_h1 = scipy.sparse.csr_matrix(training_h1)			
-
-			range_l2 = localizer.localize_operator(full_l2_product, range_space, range_space)
-			range_h1 = localizer.localize_operator(full_h1_product, range_space, range_space)
-
-			ldict["omega_star_h1_product"] = omegastar_h1_product
-			ldict["range_product"] = range_h1
-
-
-
-
-			mysubgrid = getsubgrid(grid, xpos, ypos, coarse_grid_resolution)
-            		mysubbi = SubGridBoundaryInfo(mysubgrid, grid, data['boundary_info'], BoundaryType('robin'))
-            		ld, ldata = discretizer(p, grid=mysubgrid, boundary_info=mysubbi)
-
-			# do index conversion between localizations
-			ndofs = len(localizer.join_spaces(omega_space))
-			global_dofnrs = -100000000* np.ones(shape=(d.solution_space.dim,))
-			global_dofnrs[ldata['grid'].parent_indices(dof_codim)] = np.array(range(ndofs))
-			lvec = localizer.localize_vector_array(NumpyVectorArray(global_dofnrs), range_space).data[0]
-			omh1 = ld.products["h1"].assemble()._matrix[:,lvec][lvec,:]
-			ldict["omega_product"] = NumpyMatrixOperator(omh1)
 
 	return global_quantities, local_quantities
 
