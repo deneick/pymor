@@ -6,7 +6,7 @@ from pymor.discretizers.elliptic import discretize_elliptic_cg
 from pymor.discretizers.maxwell import *
 from pymor.discretizations.basic import StationaryDiscretization
 from pymor.operators.numpy import NumpyGenericOperator
-#from pymor.operators.constructions import induced_norm, LincombOperator
+from pymor.operators.constructions import LincombOperator
 from pymor.grids.subgrid import SubGrid
 from pymor.grids.boundaryinfos import SubGridBoundaryInfo
 from pymor.domaindescriptions.boundarytypes import BoundaryType
@@ -109,16 +109,16 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 	global_quantities["subspaces_per_codim"] = subspaces_per_codim
 	localizer = NumpyLocalizer(d.solution_space, subspaces['dofs'])
 	global_quantities["localizer"] = localizer
-	pou = localized_pou(subspaces, subspaces_per_codim, localizer, coarse_grid_resolution, grid, localization_codim, dof_codim)
+
+	pou = localized_pou(subspaces, subspaces_per_codim, localizer, coarse_grid_resolution, grid)
 	global_quantities["pou"] = pou
-	spaces = [subspaces[s_id]["env"] for s_id in subspaces_per_codim[localization_codim]]
+	spaces = [subspaces[s_id]["env"] for s_id in subspaces_per_codim[2]]
 	global_quantities["spaces"] = spaces
 
 	full_l2_product = d.products["l2"].assemble()
-	full_h1_product = d.products["h1"].assemble()
-	global_quantities["h1_prod"] = full_h1_product
-	#full_h1_0_product = d.products["h1_0"].assemble()
-	#global_quantities["h1_0_prod"] = full_h1_0_product
+	full_h1_semi_product = d.products["h1_semi"].assemble()
+	k_product = LincombOperator((full_h1_semi_product,full_l2_product),(1,mus["k"]**2)).assemble()
+	global_quantities["k_product"] = k_product
 	for xpos in range(coarse_grid_resolution-1):
 		for ypos in range(coarse_grid_resolution-1):
 			#print "localizing..."
@@ -195,6 +195,14 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 					T_robin.T[i] = ti._array
 				ldict["transfer_matrix_robin"] = T_robin
 
+			#Konstruktion der Produkte:
+			range_k = localizer.localize_operator(k_product, range_space, range_space)
+			omstar_k = LincombOperator((NumpyMatrixOperator(ld.products["h1_semi"].assemble()._matrix[:,lvecext][lvecext,:]),NumpyMatrixOperator(ld.products["l2"].assemble()._matrix[:,lvecext][lvecext,:])),(1,mus["k"]**2)).assemble()
+
+
+			ldict["omega_star_product"] = omstar_k
+			ldict["range_product"] = range_k
+
 			if calQ:
 				#Loesungs-Matrix:
 				solution_op_robin = create_robin_solop(localizer, bilifo, source_space, omega_star_space)		
@@ -206,8 +214,7 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 					qi = solution_op_robin.apply(ei)
 					Q_r.T[i] = qi._array
 				ldict["solution_matrix_robin"] = Q_r
-				omstarh1 = ld.products["h1"].assemble()._matrix[:,lvecext][lvecext,:]
-				source_Q_r_product = NumpyMatrixOperator(Q_r.T.conj().dot(omstarh1.dot(Q_r)))
+				source_Q_r_product = NumpyMatrixOperator(Q_r.T.conj().dot(omstar_k._matrix.dot(Q_r)))
 				ldict["source_product"] = source_Q_r_product
 
 			#Konstruktion der Produkte:
@@ -243,7 +250,6 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 			lvec = localizer.localize_vector_array(NumpyVectorArray(global_dofnrs), range_space).data[0]
 			omh1 = ld.products["h1"].assemble()._matrix[:,lvec][lvec,:]
 			ldict["omega_product"] = NumpyMatrixOperator(omh1)
-
 
 	return global_quantities, local_quantities
 

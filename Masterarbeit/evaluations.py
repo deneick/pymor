@@ -212,7 +212,7 @@ def ungleichungk(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), cloc
 	if returnvals:
 		return [krang, means_ls, means_rs2]
 
-def ungleichungk2(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), cloc0 = 0, cloc1 = 1, cloc2 = 1, returnvals=False, resolution = 100, coarse_grid_resolution = 10):
+def ungleichungk2(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.2), cloc0 = 0, cloc1 = 1, cloc2 = 1, returnvals=False, resolution = 100, coarse_grid_resolution = 10):
 	p = helmholtz(boundary = boundary)	
 	LS = []
 	for k in krang:
@@ -225,6 +225,7 @@ def ungleichungk2(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), clo
 		calculate_inf_sup_constant2(gq, lq)	
 		calculate_lambda_min(gq, lq)
 		calculate_csis(gq,lq)	
+		norm = induced_norm(gq["k_product"])
 		d = gq["d"]
 		u = d.solve(mus)
 		ls = []
@@ -233,7 +234,7 @@ def ungleichungk2(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), clo
 			sys.stdout.flush()
 			bases = create_bases(gq, lq, num_testvecs=20, transfer = 'robin', target_accuracy = acc, calC = False)
 			ru = reconstruct_solution(gq,lq,bases)
-			ls.append(d.h1_norm(u-ru)[0]/d.h1_norm(u)[0])
+			ls.append(norm(u-ru)[0]/norm(u)[0])
 		LS.append(ls)
 	means_ls = np.mean(LS, axis = 1)
 	data = np.vstack([krang, means_ls]).T
@@ -243,7 +244,7 @@ def ungleichungk2(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), clo
 
 def plotconstants(boundary, save, cloc0 = 0, cloc1 = 1, cloc2 = 1, resolution = 50, coarse_grid_resolution = 10, returnvals = False):
 	p = helmholtz(boundary = boundary)
-	kspace = np.arange(0.1,10.,.1)
+	kspace = np.arange(0.1,10.1,1.)
 	#A = []
 	B = []
 	C = []
@@ -296,7 +297,8 @@ def test2(transfer = 'robin',boundary = 'dirichlet', acc=1e-2,k=6.,cglob= 6, clo
 	d = gq["d"]
 	u = d.solve(mus)
 	dif = u-ru
-	print d.h1_norm(dif)[0]/d.h1_norm(u)[0]
+	norm = induced_norm(gq["k_product"])
+	print norm(dif)[0]/norm(u)[0]
 	d.visualize((dif.real, dif.imag, u.real, u.imag, ru.real, ru.imag), legend = ('dif.real', 'dif.imag', 'u.real', 'u.imag', 'ru.real', 'ru.imag'), separate_colorbars = True, title = title)
 
 def kerr(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, rang = np.arange(0.1,50.1,.2), plot = False, resolution = 200, coarse_grid_resolution = 10):

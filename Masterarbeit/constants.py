@@ -42,7 +42,7 @@ def calculate_inf_sup_constant(gq,lq, bases):#, mus):
 	#H10 = gq["h1_0_prod"]
 	#operator_reductor0 = LRBOperatorProjection(H10, rhs, localizer, spaces, bases, spaces, bases)
 	#Y = operator_reductor0.get_reduced_operator()._matrix
-	H1 = gq["h1_prod"]
+	H1 = gq["k_product"]
 	operator_reductor = LRBOperatorProjection(H1, rhs, localizer, spaces, bases, spaces, bases)
 	X = operator_reductor.get_reduced_operator()._matrix
 	Y = operator_reductor.get_reduced_operator()._matrix
@@ -64,8 +64,7 @@ def calculate_inf_sup_constant(gq,lq, bases):#, mus):
 def calculate_inf_sup_constant2(gq,lq):	
 	op = gq["op"]
 	A = op._matrix
-	H1 = gq["h1_prod"]._matrix
-	H1_0 = gq["h1_0_prod"]._matrix
+	H1 = gq["k_product"]._matrix
 	Y = H1
 	X = H1
 
@@ -98,8 +97,7 @@ def calculate_inf_sup_constant2(gq,lq):
 def calculate_continuity_constant(gq, lq):#, mus):
 	A = gq["op"]._matrix
 	#A = gq["d"].operator.assemble(mus)._matrix	
-	H1 = gq["h1_prod"]._matrix
-	H1_0 = gq["h1_0_prod"]._matrix
+	H1 = gq["k_product"]._matrix
 	Y = H1
 	X = H1
 	
@@ -131,7 +129,7 @@ def calculate_csis(gq, lq):
 		ldict = lq[space]
 		T = ldict["solution_matrix_robin"]
 		u_s = ldict["local_sol2"]
-		product = ldict["omega_star_h1_product"]
+		product = ldict["omega_star_product"]
 		norm = induced_norm(product)
 		if norm(u_s).real < 1e-14: 
 			result = 1
