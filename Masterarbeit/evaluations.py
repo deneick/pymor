@@ -385,7 +385,7 @@ def cerr2D(it, n, k, boundary, save, cglob = 0, rang = np.arange(-10.,10.,1.), y
 			print c
 			mus = {'k': k, 'c_glob': cglob, 'c_loc': c}
 			gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus)
-			norm = gq["k_product"]
+			norm = induced_norm(gq["k_product"])
 			d = gq["d"]
 			u = d.solve(mus)
 			e_r = []
