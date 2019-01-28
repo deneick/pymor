@@ -6,7 +6,7 @@ from pymor.discretizers.elliptic import discretize_elliptic_cg
 from pymor.discretizers.maxwell import *
 from pymor.discretizations.basic import StationaryDiscretization
 from pymor.operators.numpy import NumpyGenericOperator
-from pymor.operators.constructions import LincombOperator
+from pymor.operators.constructions import induced_norm, LincombOperator
 from pymor.grids.subgrid import SubGrid
 from pymor.grids.boundaryinfos import SubGridBoundaryInfo
 from pymor.domaindescriptions.boundarytypes import BoundaryType
