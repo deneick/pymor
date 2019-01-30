@@ -16,7 +16,7 @@ def cube(cloc):
     dif_r = u-ru_r
     return gq["full_norm"](dif_r)[0]/gq["full_norm"](u)[0]
 
-pool = mp.Pool(processes=2)
+pool = mp.Pool(processes=1)
 results = pool.map(cube,  range(0,300,10))
 print(results)
 
