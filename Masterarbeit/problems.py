@@ -64,8 +64,10 @@ def helmholtz(boundary = 'robin', g=0., f=True):
 	parameter_range=(0., 100.)
 	parameter_space = CubicParameterSpace({'k': (), 'c_glob': (), 'c_loc': ()}, *parameter_range)
 
+	eps = 1e-15
+
 	def func(x, mu):
-		return ((x[...,0]>1-1e-16)+(x[...,0]<1e-16)+(x[...,1]>1-1e-16)+(x[...,1]<1e-16)>0)*mu["c_glob"] +((x[...,0]>1-1e-16)+(x[...,0]<1e-16)+(x[...,1]>1-1e-16)+(x[...,1]<1e-16)==0)* mu["c_loc"]
+		return ((x[...,0]>1-eps)+(x[...,0]<eps)+(x[...,1]>1-eps)+(x[...,1]<eps)>0)*mu["c_glob"] +((x[...,0]>1-eps)+(x[...,0]<eps)+(x[...,1]>1-eps)+(x[...,1]<eps)==0)* mu["c_loc"]
 	cfunc = GenericFunction(func, dim_domain =2, parameter_type={'k': (), 'c_glob': (), 'c_loc': ()})
 
 	p = EllipticProblem(

@@ -71,8 +71,8 @@ def evaluation(it, lim, k, boundary, save, cglob = 0, cloc = 0, plot = False, re
 			del basis_robin
 			dif_dirichlet = u -ru_dirichlet
 			dif_robin = u-ru_robin
-			h1d.append(d.h1_norm(dif_dirichlet)[0]/d.h1_norm(u)[0])
-			h1r.append(d.h1_norm(dif_robin)[0]/d.h1_norm(u)[0])
+			h1d.append(gq["full_norm"](dif_dirichlet)[0]/gq["full_norm"](u)[0])
+			h1r.append(gq["full_norm"](dif_robin)[0]/gq["full_norm"](u)[0])
 		h1_dirichlet.append(h1d)
 		h1_robin.append(h1r)
 	limits = [0, 25, 50, 75, 100]
@@ -127,7 +127,7 @@ def ungleichung(it, k, boundary, save, cglob = 0, cloc = 0, returnvals=False, re
 				maxval = operator_svd2(T1, S, M_sparse)[0][0]
 				rssum2 += maxval**2*ldict["csi"]**2
 			ru = reconstruct_solution(gq,lq,bases)
-			ls.append(d.h1_norm(u-ru)[0]/d.h1_norm(u)[0])
+			ls.append(gq["full_norm"](u-ru)[0]/gq["full_norm"](u)[0])
 			rs2.append((gq["continuity_constant"]/gq["inf_sup_constant"])*4*np.sqrt(rssum2))
 		LS.append(ls)
 		RS2.append(rs2)
@@ -158,7 +158,7 @@ def ungleichung2(it, k, boundary, save, cglob = 0, cloc = 0, returnvals=False, r
 			sys.stdout.flush()
 			bases = create_bases(gq, lq, num_testvecs=20, transfer = 'robin', target_accuracy = tol, calC = False)
 			ru = reconstruct_solution(gq,lq,bases)
-			ls.append(d.h1_norm(u-ru)[0]/d.h1_norm(u)[0])
+			ls.append(gq["full_norm"](u-ru)[0]/gq["full_norm"](u)[0])
 		LS.append(ls)
 	means_ls = np.mean(LS, axis = 1)
 	data = np.vstack([tols, means_ls]).T
@@ -201,7 +201,7 @@ def ungleichungk(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), cloc
 				maxval = operator_svd2(T1, S, M_sparse)[0][0]
 				rssum2 += maxval**2*ldict["csi"]**2
 			ru = reconstruct_solution(gq,lq,bases)
-			ls.append(d.h1_norm(u-ru)[0]/d.h1_norm(u)[0])
+			ls.append(gq["full_norm"](u-ru)[0]/gq["full_norm"](u)[0])
 			rs2.append((gq["continuity_constant"]/gq["inf_sup_constant"])*4*np.sqrt(rssum2))
 		LS.append(ls)
 		RS2.append(rs2)
@@ -225,7 +225,6 @@ def ungleichungk2(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.2), clo
 		calculate_inf_sup_constant2(gq, lq)	
 		calculate_lambda_min(gq, lq)
 		calculate_csis(gq,lq)	
-		norm = induced_norm(gq["k_product"])
 		d = gq["d"]
 		u = d.solve(mus)
 		ls = []
@@ -234,7 +233,7 @@ def ungleichungk2(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.2), clo
 			sys.stdout.flush()
 			bases = create_bases(gq, lq, num_testvecs=20, transfer = 'robin', target_accuracy = acc, calC = False)
 			ru = reconstruct_solution(gq,lq,bases)
-			ls.append(norm(u-ru)[0]/norm(u)[0])
+			ls.append(gq["full_norm"](u-ru)[0]/gq["full_norm"](u)[0])
 		LS.append(ls)
 	means_ls = np.mean(LS, axis = 1)
 	data = np.vstack([krang, means_ls]).T
@@ -285,7 +284,7 @@ def test1(transfer = 'robin',boundary = 'dirichlet', n=15,k=6.,cglob= 6, cloc=6.
 	d = gq["d"]
 	u = d.solve(mus)
 	dif = u-ru
-	print d.h1_norm(dif)[0]/d.h1_norm(u)[0]
+	print gq["full_norm"](dif)[0]/gq["full_norm"](u)[0]
 	d.visualize((dif.real, dif.imag, u.real, u.imag, ru.real, ru.imag), legend = ('dif.real', 'dif.imag', 'u.real', 'u.imag', 'ru.real', 'ru.imag'), separate_colorbars = True, title = title)
 
 def test2(transfer = 'robin',boundary = 'dirichlet', acc=1e-2,k=6.,cglob= 6, cloc=6., title = 'test', resolution = 100, coarse_grid_resolution = 10):
@@ -297,11 +296,10 @@ def test2(transfer = 'robin',boundary = 'dirichlet', acc=1e-2,k=6.,cglob= 6, clo
 	d = gq["d"]
 	u = d.solve(mus)
 	dif = u-ru
-	norm = induced_norm(gq["k_product"])
-	print norm(dif)[0]/norm(u)[0]
+	print gq["full_norm"](dif)[0]/gq["full_norm"](u)[0]
 	d.visualize((dif.real, dif.imag, u.real, u.imag, ru.real, ru.imag), legend = ('dif.real', 'dif.imag', 'u.real', 'u.imag', 'ru.real', 'ru.imag'), separate_colorbars = True, title = title)
 
-def kerr(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, rang = np.arange(0.1,50.1,.2), plot = False, resolution = 200, coarse_grid_resolution = 10):
+def kerr(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, rang = np.arange(1,101,1), plot = False, resolution = 200, coarse_grid_resolution = 10):
 	#k/err
 	err_d =[]
 	err_r = []
@@ -315,6 +313,8 @@ def kerr(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, r
 		mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 		#resolution = int(30+1.6*k)- int(30+1.6*k)% coarse_grid_resolution
 		#n = int(15 + 0.25*k)
+		resolution  = int(np.ceil(float(k*1.5+30)/coarse_grid_resolution)*coarse_grid_resolution)
+		n = int(k/4+20)
 		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus)
 		d = gq["d"]
 		u = d.solve(mus)
@@ -331,8 +331,8 @@ def kerr(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, r
 			del bases
 			dif_d = u-ru_d
 			dif_r = u-ru_r
-			e_d.append(d.h1_norm(dif_d)[0]/d.h1_norm(u)[0])
-			e_r.append(d.h1_norm(dif_r)[0]/d.h1_norm(u)[0])
+			e_d.append(gq["full_norm"](dif_d)[0]/gq["full_norm"](u)[0])
+			e_r.append(gq["full_norm"](dif_r)[0]/gq["full_norm"](u)[0])
 		err_d.append(e_d)
 		err_r.append(e_r)
 	means_d = np.mean(err_d, axis = 1)
@@ -363,7 +363,7 @@ def resolution(it, k, n, boundary, save, cloc = 0, returnvals = False, coarse_gr
 		for i in range(it):
 			bases = create_bases2(gq, lq, n, transfer = 'robin')
 			ru = reconstruct_solution(gq, lq, bases)
-			E.append(d.h1_norm(u-ru)[0]/d.h1_norm(u)[0])
+			E.append(gq["full_norm"](u-ru)[0]/gq["full_norm"](u)[0])
 		err.append(E)
 	errs = np.mean(err, axis = 1)
 	data = np.vstack([space, errs]).T
@@ -385,7 +385,6 @@ def cerr2D(it, n, k, boundary, save, cglob = 0, rang = np.arange(-10.,10.,1.), y
 			print c
 			mus = {'k': k, 'c_glob': cglob, 'c_loc': c}
 			gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus)
-			norm = induced_norm(gq["k_product"])
 			d = gq["d"]
 			u = d.solve(mus)
 			e_r = []
@@ -396,7 +395,7 @@ def cerr2D(it, n, k, boundary, save, cglob = 0, rang = np.arange(-10.,10.,1.), y
 				ru_r = reconstruct_solution(gq, lq, bases)
 				del bases
 				dif_r = u-ru_r
-				e_r.append(norm(dif_r)[0]/norm(u)[0])
+				e_r.append(gq["full_norm"](dif_r)[0]/gq["full_norm"](u)[0])
 			err_r[xi][yi]=np.mean(e_r)
 			yi+=1
 		xi+=1
@@ -438,7 +437,7 @@ def knerr2D(it, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, k
 				ru_r = reconstruct_solution(gq, lq, bases)
 				del bases
 				dif_r = u-ru_r
-				e_r.append(d.h1_norm(dif_r)[0]/d.h1_norm(u)[0])
+				e_r.append(gq["full_norm"](dif_r)[0]/gq["full_norm"](u)[0])
 			err_r[xi][yi]=np.mean(e_r)
 			yi+=1
 		xi+=1
@@ -476,7 +475,7 @@ def findcloc(it=50, k=20, n=15, s = 4., smin = 0.5, cloc = 0., boundary = 'robin
 				ru_r = reconstruct_solution(gq, lq, bases)
 				del bases
 				dif_r = u-ru_r
-				e_r.append(d.h1_norm(dif_r)[0]/d.h1_norm(u)[0])
+				e_r.append(gq["full_norm"](dif_r)[0]/gq["full_norm"](u)[0])
 			err0 = np.mean(e_r)
 			dic[cloc]=err0
 		clocs = [cloc-s, cloc +s, cloc -s*1j, cloc +s*1j]
@@ -498,7 +497,7 @@ def findcloc(it=50, k=20, n=15, s = 4., smin = 0.5, cloc = 0., boundary = 'robin
 					ru_r = reconstruct_solution(gq, lq, bases)
 					del bases
 					dif_r = u-ru_r
-					e_r.append(d.h1_norm(dif_r)[0]/d.h1_norm(u)[0])
+					e_r.append(gq["full_norm"](dif_r)[0]/gq["full_norm"](u)[0])
 				err = np.mean(e_r)
 				errs.append(err)
 				dic[cloc1]=err
@@ -537,7 +536,7 @@ def ckerr2D(it, n, boundary, save, cglob = None, krang = np.arange(0.,20.,2.), c
 				ru_r = reconstruct_solution(gq, lq, bases)
 				del bases
 				dif_r = u-ru_r
-				e_r.append(d.h1_norm(dif_r)[0]/d.h1_norm(u)[0])
+				e_r.append(gq["full_norm"](dif_r)[0]/gq["full_norm"](u)[0])
 			err_r[xi][yi]=np.mean(e_r)
 			yi+=1
 		xi+=1

@@ -118,7 +118,7 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 	full_l2_product = d.products["l2"].assemble()
 	full_h1_semi_product = d.products["h1_semi"].assemble()
 	k_product = LincombOperator((full_h1_semi_product,full_l2_product),(1,mus["k"]**2)).assemble()
-	global_quantities["k_product"] = k_product
+	global_quantities["full_norm"] = induced_norm(k_product)
 	for xpos in range(coarse_grid_resolution-1):
 		for ypos in range(coarse_grid_resolution-1):
 			#print "localizing..."
