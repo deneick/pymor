@@ -39,6 +39,7 @@ from pymor.basic import *
 from localize_problem import *
 from constants import *
 from generate_solution import *
+import multiprocessing as mp
 import time
 
 if not os.path.exists("dats"):
@@ -306,6 +307,7 @@ def kerr(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, r
 	err_d =[]
 	err_r = []
 	p = helmholtz(boundary = boundary)
+	pool = mp.Pool(processes = process_count)
 	usecglob = (cglob is None)
 	for k in rang:
 		if usecglob:
@@ -320,21 +322,22 @@ def kerr(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, r
 		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus)
 		d = gq["d"]
 		u = d.solve(mus)
-		e_d = []
-		e_r = []
-		for i in range(it):
-			print i,
-			sys.stdout.flush()
+
+		def cube1():
 			bases = create_bases2(gq,lq,n,transfer = 'robin')
 			ru_r = reconstruct_solution(gq, lq, bases)
 			del bases
+			dif_r = u-ru_r
+			return gq["full_norm"](dif_r)[0]/gq["full_norm"](u)[0]
+		e_r = pool.map(cube1, range(it))
+
+		def cube2():
 			bases = create_bases2(gq,lq,n,transfer = 'dirichlet')
 			ru_d = reconstruct_solution(gq, lq, bases)
 			del bases
 			dif_d = u-ru_d
-			dif_r = u-ru_r
-			e_d.append(gq["full_norm"](dif_d)[0]/gq["full_norm"](u)[0])
-			e_r.append(gq["full_norm"](dif_r)[0]/gq["full_norm"](u)[0])
+			return gq["full_norm"](dif_d)[0]/gq["full_norm"](u)[0]
+		e_d = pool.map(cube2, range(it))
 		err_d.append(e_d)
 		err_r.append(e_r)
 	means_d = np.mean(err_d, axis = 1)
