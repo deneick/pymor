@@ -45,6 +45,8 @@ if not os.path.exists("dats"):
 	os.makedirs("dats")
 set_log_levels(levels={'pymor': 'WARN'})
 
+process_count = 10
+
 def evaluation(it, lim, k, boundary, save, cglob = 0, cloc = 0, plot = False, resolution = 200, coarse_grid_resolution = 10):
 	#import time
 	p = helmholtz(boundary = boundary)
@@ -377,6 +379,7 @@ def cerr2D(it, n, k, boundary, save, cglob = 0, rang = np.arange(-10.,10.,1.), y
 		yrang = rang
 	err_r = np.zeros((len(rang),len(yrang)))
 	p = helmholtz(boundary = boundary)
+	pool = mp.Pool(processes = process_count)
 	xi = 0
 	for x in rang:
 		yi = 0
@@ -387,15 +390,14 @@ def cerr2D(it, n, k, boundary, save, cglob = 0, rang = np.arange(-10.,10.,1.), y
 			gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus)
 			d = gq["d"]
 			u = d.solve(mus)
-			e_r = []
-			for i in range(it):
-				print i,
-				sys.stdout.flush()
+	
+			def cube():
 				bases = create_bases2(gq,lq,n,transfer = 'robin')
 				ru_r = reconstruct_solution(gq, lq, bases)
 				del bases
 				dif_r = u-ru_r
-				e_r.append(gq["full_norm"](dif_r)[0]/gq["full_norm"](u)[0])
+				return gq["full_norm"](dif_r)[0]/gq["full_norm"](u)[0]
+			e_r = pool.map(cube, range(it))
 			err_r[xi][yi]=np.mean(e_r)
 			yi+=1
 		xi+=1
