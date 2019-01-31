@@ -304,6 +304,57 @@ def test2(transfer = 'robin',boundary = 'dirichlet', acc=1e-2,k=6.,cglob= 6, clo
 
 def kerr(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, rang = np.arange(1,101,1), plot = False, resolution = 200, coarse_grid_resolution = 10):
 	#k/err
+	#err_d =[]
+	#err_r = []
+	p = helmholtz(boundary = boundary)
+	global cube
+	def cube(k):
+		cglob = -1j*k 			
+		cloc = cloc0+ cloc1*k+cloc2*k**2
+		print "k: ", k, "cloc: ", cloc
+		mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+		#resolution = int(30+1.6*k)- int(30+1.6*k)% coarse_grid_resolution
+		#n = int(15 + 0.25*k)
+		resolution  = int(np.ceil(float(k*1.5+30)/coarse_grid_resolution)*coarse_grid_resolution)
+		n = int(k/4+20)
+		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus)
+		d = gq["d"]
+		u = d.solve(mus)
+		e_r = []
+		e_d = []
+		for i in range(it):
+			print i,
+			sys.stdout.flush()
+			bases = create_bases2(gq,lq,n,transfer = 'robin')
+			ru_r = reconstruct_solution(gq, lq, bases)
+			del bases
+			dif_r = u-ru_r
+			e_r.append(gq["full_norm"](dif_r)[0]/gq["full_norm"](u)[0])
+			bases = create_bases2(gq,lq,n,transfer = 'dirichlet')
+			ru_d = reconstruct_solution(gq, lq, bases)
+			del bases
+			dif_d = u-ru_d
+			e_d.append(gq["full_norm"](dif_d)[0]/gq["full_norm"](u)[0])
+		return e_d, e_r
+	pool = mp.Pool(processes=mp.cpu_count()-2)
+	err_d, err_r = pool.map(cube,  rang)
+	print(results)
+		
+	means_d = np.mean(err_d, axis = 1)
+	means_r = np.mean(err_r, axis = 1)
+	data = np.vstack([rang, means_d, means_r]).T
+	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
+	if plot:	
+		from matplotlib import pyplot as plt
+		plt.figure()
+		plt.semilogy(rang, means_r, label = "robin")
+		plt.semilogy(rang, means_d, label = "dirichlet")
+		plt.xlabel('k')
+		plt.legend(loc='upper right')
+		plt.show()
+
+def kerrnomp(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, rang = np.arange(1,101,1), plot = False, resolution = 200, coarse_grid_resolution = 10):
+	#k/err
 	err_d =[]
 	err_r = []
 	p = helmholtz(boundary = boundary)
