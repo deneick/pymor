@@ -316,7 +316,7 @@ def kerr(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, r
 		#resolution = int(30+1.6*k)- int(30+1.6*k)% coarse_grid_resolution
 		#n = int(15 + 0.25*k)
 		resolution  = int(np.ceil(float(k*1.5+30)/coarse_grid_resolution)*coarse_grid_resolution)
-		n = int(k/4+20)
+		n = int(k/5+20)
 		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus)
 		d = gq["d"]
 		u = d.solve(mus)
@@ -336,7 +336,7 @@ def kerr(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, r
 			dif_d = u-ru_d
 			e_d.append(gq["full_norm"](dif_d)[0]/gq["full_norm"](u)[0])
 		return np.mean(e_d), np.mean(e_r)
-	pool = mp.Pool(processes=3)
+	pool = mp.Pool()
 	results = pool.map(cube,  rang)
 	means_d = np.array(results).T[0].tolist()
 	means_r = np.array(results).T[1].tolist()
