@@ -307,7 +307,6 @@ def kerr(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, r
 	err_d =[]
 	err_r = []
 	p = helmholtz(boundary = boundary)
-	pool = mp.Pool(processes = process_count)
 	usecglob = (cglob is None)
 	for k in rang:
 		if usecglob:

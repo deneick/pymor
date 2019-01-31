@@ -6,6 +6,7 @@ from pymor.vectorarrays.numpy import NumpyVectorArray
 import numpy as np
 import scipy
 from constants import *
+import multiprocessing as mp
 
 #adaptive Basiserstellung (Algorithmus 3)
 def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None, target_accuracy = 1e-3, max_failure_probability = 1e-15, silent = True, calC = True):
