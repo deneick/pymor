@@ -335,13 +335,12 @@ def kerr(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, r
 			del bases
 			dif_d = u-ru_d
 			e_d.append(gq["full_norm"](dif_d)[0]/gq["full_norm"](u)[0])
-		return e_d, e_r
-	pool = mp.Pool(processes=mp.cpu_count()-2)
-	err_d, err_r = pool.map(cube,  rang)
-	print(results)
+		return np.mean(e_d), np.mean(e_r)
+	pool = mp.Pool(processes=3)
+	results = pool.map(cube,  rang)
+	means_d = np.array(results).T[0].tolist()
+	means_r = np.array(results).T[1].tolist()
 		
-	means_d = np.mean(err_d, axis = 1)
-	means_r = np.mean(err_r, axis = 1)
 	data = np.vstack([rang, means_d, means_r]).T
 	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
 	if plot:	
@@ -353,7 +352,7 @@ def kerr(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, r
 		plt.legend(loc='upper right')
 		plt.show()
 
-def kerrnomp(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, rang = np.arange(1,101,1), plot = False, resolution = 200, coarse_grid_resolution = 10):
+def kerrnotmp(it, n, boundary, save, cglob = None, cloc0 = 0, cloc1 = 1, cloc2 = 1, rang = np.arange(1,101,1), plot = False, resolution = 200, coarse_grid_resolution = 10):
 	#k/err
 	err_d =[]
 	err_r = []

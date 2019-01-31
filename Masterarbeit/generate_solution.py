@@ -117,6 +117,38 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 """
 
 #nicht-adaptive Basiserstellung (Algorithmus 4):
+def create_bases3(gq, lq, basis_size, transfer = 'dirichlet', silent = True):
+	#Basiserstellung mit Basisgroesse
+	if not silent:
+		print "creating bases"
+	bases = {}
+	for space in gq["spaces"]:
+		ldict = lq[space]
+		#Basis mit Shift-Loesung initialisieren:
+		if transfer == 'dirichlet':
+			lsol = ldict["local_solution_dirichlet"]
+		else: 
+			lsol = ldict["local_solution_robin"]
+		product = ldict["range_product"]
+		basis = lsol.copy()
+		gram_schmidt(basis, copy=False, product = product)
+		if transfer == 'dirichlet':
+			transop = ldict["dirichlet_transfer"]
+		else: 
+			transop = ldict["robin_transfer"]
+		global cube
+		def cube(i):
+			vec = np.random.normal(size=(1,transop.source.dim))+1j*np.random.normal(size=(1,transop.source.dim))	
+			u_t = transop.apply(NumpyVectorArray(vec))
+			return u_t
+		pool = mp.Pool(processes=3)
+		basislist = pool.map(cube,  range(basis_size))
+		for i in range(basis_size): basis.append(basislist[i])
+		gram_schmidt(basis, product = product, copy = False)
+		bases[space] = basis
+	return bases
+
+#nicht-adaptive Basiserstellung (Algorithmus 4):
 def create_bases2(gq, lq, basis_size, transfer = 'dirichlet', silent = True):
 	#Basiserstellung mit Basisgroesse
 	if not silent:
