@@ -59,7 +59,7 @@ def helmholtz(boundary = 'robin', g=0., f=True):
 	if f:
 		rhs = ExpressionFunction('(( (x[...,0]-0.15)**2 + (x[...,1]-0.15)**2) <= 0.01) * 1.', 2, ())
 	else:
-		rhs=ConstantFunction(1., dim_domain=domain.dim)
+		rhs=ConstantFunction(0., dim_domain=domain.dim)
 
 	parameter_range=(0., 100.)
 	parameter_space = CubicParameterSpace({'k': (), 'c_glob': (), 'c_loc': ()}, *parameter_range)

@@ -278,7 +278,8 @@ def plotconstants(boundary, save, cloc0 = 0, cloc1 = 1, cloc2 = 1, resolution = 
 	if returnvals:
 		return [kspace, B, C]
 
-def test1(transfer = 'robin',boundary = 'dirichlet', n=15,k=6.,cglob= 6, cloc=6., title = 'test', resolution = 100, coarse_grid_resolution = 10):
+def test1(transfer = 'robin',boundary = 'dirichlet', n=15,k=6., cloc=6., title = 'test', resolution = 100, coarse_grid_resolution = 10):
+	cglob = -1j*k
 	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 	p = helmholtz(boundary = boundary)
 	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus)
@@ -315,7 +316,7 @@ def kerr(it, boundary, save, cloc0 = 0, cloc1 = 1, cloc2 = 1, rang = np.arange(1
 		mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 		#resolution = int(30+1.6*k)- int(30+1.6*k)% coarse_grid_resolution
 		#n = int(15 + 0.25*k)
-		resolution  = int(np.ceil(float(k*1.5+30)/coarse_grid_resolution)*coarse_grid_resolution)
+		resolution  = int(np.ceil(float(k*1.5+50)/coarse_grid_resolution)*coarse_grid_resolution)
 		n = int(k/5+30)
 		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus)
 		d = gq["d"]
