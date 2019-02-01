@@ -30,3 +30,4 @@ git pull
 rm -r ~/pymor/Masterarbeit/dats/*
 
 
+export OMP_NUM_THREADS=1
