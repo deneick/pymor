@@ -15,7 +15,7 @@ ipython --pdb Test.py
 ssh -Y d_eick05@jaina.uni-muenster.de
 
 
-scp -r d_eick05@JAINA.uni-muenster.de:/data/home/d_eick05/pymor/Masterarbeit/dats /shared/dats
+scp -r d_eick05@JAINA.uni-muenster.de:/data/home/d_eick05/pymor/Masterarbeit/dats ~
 
 sudo openconnect vpn.uni-muenster.de
 

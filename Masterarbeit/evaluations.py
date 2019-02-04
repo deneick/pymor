@@ -303,7 +303,7 @@ def test2(transfer = 'robin',boundary = 'dirichlet', acc=1e-2,k=6.,cglob= 6, clo
 	print gq["full_norm"](dif)[0]/gq["full_norm"](u)[0]
 	d.visualize((dif.real, dif.imag, u.real, u.imag, ru.real, ru.imag), legend = ('dif.real', 'dif.imag', 'u.real', 'u.imag', 'ru.real', 'ru.imag'), separate_colorbars = True, title = title)
 
-def kerr(it, boundary, save, cloc0 = 0, cloc1 = 1, cloc2 = 1, rang = np.arange(0.5,10.5,0.5), plot = False, coarse_grid_resolution = 10):
+def kerr(it, boundary, save, cloc0 = 0, cloc1 = 1, cloc2 = 1, rang = np.arange(0.5,100.5,0.5), plot = False, coarse_grid_resolution = 10):
 	#k/err
 	#err_d =[]
 	#err_r = []
