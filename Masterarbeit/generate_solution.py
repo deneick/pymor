@@ -15,7 +15,7 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 		if not silent:
 			print "calculating constants"
 		calculate_lambda_min(gq, lq)
-		#calculate_Psi_norm(gq,lq)
+		calculate_Psi_norm(gq,lq)
 		calculate_continuity_constant(gq, lq)
 		calculate_inf_sup_constant2(gq, lq)
 		calculate_csis(gq,lq)

@@ -7,10 +7,10 @@ c3 = ungleichungk2(it= 10, acc=1e-2, boundary= 'neumann', save = "dats/ungleichu
 """
 from matplotlib import pyplot as plt
 plt.figure()
-#plt.semilogy(c1[0], c1[1], label = "Beispiel 1")
-#plt.semilogy(c2[0], c2[1], label = "Beispiel 2")
+plt.semilogy(c1[0], c1[1], label = "Beispiel 1")
+plt.semilogy(c2[0], c2[1], label = "Beispiel 2")
 plt.semilogy(c3[0], c3[1], label = "Beispiel 3")
-#plt.semilogy(c1[0], c1[2], label = "a priori")
+plt.semilogy(c1[0], c1[2], label = "a priori")
 plt.semilogy(c3[0], np.ones(len(c3[0]))*1e-2, label = "tol_glob")
 plt.legend(loc='upper right')
 plt.xlabel('k')

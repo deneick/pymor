@@ -23,8 +23,8 @@ def calculate_lambda_min(gq, lq):
 	for space in spaces:
 		ldict = lq[space]
 		mat = ldict["source_product"]._matrix
-		#val = scipy.sparse.linalg.eigsh(mat, return_eigenvectors = False, k=1, which="SM", tol = 1e-3)[0]
-		val = np.abs(np.sort(np.linalg.eig(mat)[0])[0])
+		val = scipy.sparse.linalg.eigsh(mat, return_eigenvectors = False, k=1, which="SM", tol = 1e-3)[0]
+		#val = np.abs(np.sort(np.linalg.eig(mat)[0])[0])
 		ldict["lambda_min"] = val
 		#print "calculated lambda_min: ", val
 	print "calculated all lambdas"
@@ -159,7 +159,7 @@ def testlimit(failure_tolerance, dim_S, dim_R, num_testvecs, target_error, lambd
 def calculate_testlimit(gq, lq, space, num_testvecs, target_accuracy, max_failure_probability = 1e-15):
 	ldict = lq[space]
 	coarse_grid_resolution = gq["coarse_grid_resolution"]
-	tol_i = target_accuracy*gq["inf_sup_constant"]/( (coarse_grid_resolution -1) *4 * gq["continuity_constant"]) / ldict["csi"]
+	tol_i = target_accuracy*gq["inf_sup_constant"]/( (coarse_grid_resolution -1) *4 * gq["continuity_constant"]) / (ldict["csi"]*ldict["Psi_norm"])
 	#print "tol_i: ", tol_i
 	local_failure_tolerance = max_failure_probability / ( (coarse_grid_resolution -1)*4. )
 	testlimit_zeta = testlimit(
@@ -171,6 +171,22 @@ def calculate_testlimit(gq, lq, space, num_testvecs, target_accuracy, max_failur
                 lambda_min=ldict["lambda_min"]
                 )
 	return testlimit_zeta
+
+def calculate_Psi_norm(gq,lq):
+	spaces = gq["spaces"]
+	l = gq["localizer"]
+	for space in spaces:
+		ldict = lq[space]
+		H1om = ldict["omega_star_product"]._matrix
+		MS = ldict["source_product"]._matrix
+
+		Q = ldict["solution_matrix_robin"]
+		M = Q.T.conj().dot(H1om.dot(Q))
+		eigval = sp.eigs(MS, M=M)[0][0].real
+
+		ldict["Psi_norm"] = eigval
+		print "calculated Psi_norm: ", eigval
+	print "calculated all Psi_norms"
 
 """
 def calculate_Psi_norm_d(gq,lq):

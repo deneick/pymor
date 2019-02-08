@@ -202,7 +202,7 @@ def ungleichungk(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), cloc
 				B = basis._array.T
 				T1 = T - B.dot(B.conj().T).dot(M_sparse.dot(T))
 				maxval = operator_svd2(T1, S, M_sparse)[0][0]
-				rssum2 += maxval**2*ldict["csi"]**2
+				rssum2 += maxval**2*ldict["csi"]**2*ldict["Psi_norm"]**2
 			ru = reconstruct_solution(gq,lq,bases)
 			ls.append(gq["full_norm"](u-ru)[0]/gq["full_norm"](u)[0])
 			rs2.append((gq["continuity_constant"]/gq["inf_sup_constant"])*4*np.sqrt(rssum2))
@@ -216,6 +216,38 @@ def ungleichungk(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), cloc
 		return [krang, means_ls, means_rs2]
 
 def ungleichungk2(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.2), cloc0 = 0, cloc1 = 1, cloc2 = 1, returnvals=False, resolution = 100, coarse_grid_resolution = 10):
+	p = helmholtz(boundary = boundary)
+	global cube	
+	def cube(k):
+		print k
+		cglob = -1j*k
+		cloc = cloc0+ cloc1*k+cloc2*k**2
+		mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calQ = True)
+		calculate_continuity_constant(gq, lq)
+		calculate_inf_sup_constant2(gq, lq)	
+		calculate_lambda_min(gq, lq)
+		calculate_csis(gq,lq)	
+		calculate_Psi_norm(gq,lq)
+		d = gq["d"]
+		u = d.solve(mus)
+		ls = []
+		for j in range(it):
+			print j,
+			sys.stdout.flush()
+			bases = create_bases(gq, lq, num_testvecs=20, transfer = 'robin', target_accuracy = acc, calC = False)
+			ru = reconstruct_solution(gq,lq,bases)
+			ls.append(gq["full_norm"](u-ru)[0]/gq["full_norm"](u)[0])
+		return ls
+	pool = mp.Pool()
+	LS = pool.map(cube, krang)
+	means_ls = np.mean(LS, axis = 1)
+	data = np.vstack([krang, means_ls]).T
+	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
+	if returnvals:
+		return [krang, means_ls]
+
+def ungleichungk2notmp(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.2), cloc0 = 0, cloc1 = 1, cloc2 = 1, returnvals=False, resolution = 100, coarse_grid_resolution = 10):
 	p = helmholtz(boundary = boundary)	
 	LS = []
 	for k in krang:
@@ -228,6 +260,7 @@ def ungleichungk2(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.2), clo
 		calculate_inf_sup_constant2(gq, lq)	
 		calculate_lambda_min(gq, lq)
 		calculate_csis(gq,lq)	
+		calculate_Psi_norm(gq,lq)
 		d = gq["d"]
 		u = d.solve(mus)
 		ls = []

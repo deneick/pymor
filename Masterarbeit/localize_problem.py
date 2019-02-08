@@ -119,6 +119,7 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 	full_h1_semi_product = d.products["h1_semi"].assemble()
 	k_product = LincombOperator((full_h1_semi_product,full_l2_product),(1,mus["k"]**2)).assemble()
 	global_quantities["full_norm"] = induced_norm(k_product)
+	global_quantities["k_product"] = k_product
 	for xpos in range(coarse_grid_resolution-1):
 		for ypos in range(coarse_grid_resolution-1):
 			#print "localizing..."
@@ -173,6 +174,8 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 			bilifo = NumpyMatrixOperator(lop._matrix[:,lvecext][lvecext,:])
 			transop_robin = create_robin_transfer(localizer, bilifo, source_space, omega_star_space, range_space, pou)
 			ldict["robin_transfer"] = transop_robin
+
+			ldict["psi"] = localizer.to_space(NumpyVectorArray(bilifo._matrix.T), omega_star_space, source_space).data.T
 			
 			#lokale Shift-Loesung mit f(Robin)
 			lrhs = ld.rhs.assemble(mus)
@@ -216,6 +219,12 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 				ldict["solution_matrix_robin"] = Q_r
 				source_Q_r_product = NumpyMatrixOperator(Q_r.T.conj().dot(omstar_k._matrix.dot(Q_r)))
 				ldict["source_product"] = source_Q_r_product
+
+			lproduct = localizer.localize_operator(full_l2_product, source_space, source_space)
+			lmat = lproduct._matrix.tocoo()
+			lmat.data = np.array([4./6.*diameter if (row == col) else diameter/6. for row, col in izip(lmat.row, lmat.col)])
+			ldict["source_product"] = NumpyMatrixOperator(lmat.tocsc())
+			#ldict["source_product"] = NumpyMatrixOperator(scipy.sparse.csr_matrix(np.identity(len(localizer.join_spaces(source_space)))))
 
 	return global_quantities, local_quantities
 
