@@ -207,7 +207,7 @@ def operator_svd(Top, source_inner, range_inner):
 def operator_svd2(Top, source_inner, range_inner):
     mat_left = Top.conj().T.dot(range_inner.dot(Top))
     mat_right = source_inner
-    eigvals = scipy.linalg.eigvals(mat_left, mat_right)
+    eigvals = scipy.sparse.linalg.eigs(mat_left, M = mat_right, k=1)[0]
     eigvals = np.sqrt(np.abs(eigvals))
     eigvals[::-1].sort()
     return eigvals, None, None

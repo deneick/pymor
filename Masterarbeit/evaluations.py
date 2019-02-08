@@ -183,6 +183,7 @@ def ungleichungk(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), cloc
 		calculate_inf_sup_constant2(gq, lq)	
 		calculate_lambda_min(gq, lq)
 		calculate_csis(gq,lq)	
+		calculate_Psi_norm(gq,lq)
 		d = gq["d"]
 		u = d.solve(mus)
 		ls = []
@@ -215,7 +216,7 @@ def ungleichungk(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), cloc
 	if returnvals:
 		return [krang, means_ls, means_rs2]
 
-def ungleichungk2(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.2), cloc0 = 0, cloc1 = 1, cloc2 = 1, returnvals=False, resolution = 100, coarse_grid_resolution = 10):
+def ungleichungk2(it, acc, boundary, save, krang  = np.arange(0.5,100.5,0.5), cloc0 = 0, cloc1 = 1, cloc2 = 1, returnvals=False, resolution = 100, coarse_grid_resolution = 10):
 	p = helmholtz(boundary = boundary)
 	global cube	
 	def cube(k):
@@ -223,6 +224,7 @@ def ungleichungk2(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.2), clo
 		cglob = -1j*k
 		cloc = cloc0+ cloc1*k+cloc2*k**2
 		mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+		resolution  = int(np.ceil(float(k*1.5+50)/coarse_grid_resolution)*coarse_grid_resolution)
 		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calQ = True)
 		calculate_continuity_constant(gq, lq)
 		calculate_inf_sup_constant2(gq, lq)	
