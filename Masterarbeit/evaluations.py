@@ -129,7 +129,7 @@ def ungleichung(it, k, boundary, save, cglob = 0, cloc = 0, returnvals=False, re
 				B = basis._array.T
 				T1 = T - B.dot(B.conj().T).dot(M_sparse.dot(T))
 				maxval = operator_svd2(T1, S, M_sparse)[0][0]
-				rssum2 += maxval**2*ldict["csi"]**2
+				rssum2 += maxval**2*ldict["csi"]**2*ldict["Psi_norm"]**2
 			ru = reconstruct_solution(gq,lq,bases)
 			ls.append(gq["full_norm"](u-ru)[0]/gq["full_norm"](u)[0])
 			rs2.append((gq["continuity_constant"]/gq["inf_sup_constant"])*4*np.sqrt(rssum2))
@@ -177,7 +177,7 @@ def ungleichung2(it, k, boundary, save, cglob = 0, cloc = 0, returnvals=False, r
 				B = basis._array.T
 				T1 = T - B.dot(B.conj().T).dot(M_sparse.dot(T))
 				maxval = operator_svd2(T1, S, M_sparse)[0][0]
-				rssum2 += maxval**2*ldict["csi"]**2
+				rssum2 += maxval**2*ldict["csi"]**2*ldict["Psi_norm"]**2
 			ru = reconstruct_solution(gq,lq,bases)
 			ls.append(gq["full_norm"](u-ru)[0]/gq["full_norm"](u)[0])
 			rs2.append((gq["continuity_constant"]/gq["inf_sup_constant"])*4*np.sqrt(rssum2))
