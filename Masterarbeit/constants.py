@@ -185,7 +185,7 @@ def calculate_Psi_norm(gq,lq):
 		eigval = sp.eigs(MS, M=M)[0][0].real
 
 		ldict["Psi_norm"] = eigval
-		print "calculated Psi_norm: ", eigval
+		#print "calculated Psi_norm: ", eigval
 	print "calculated all Psi_norms"
 
 """

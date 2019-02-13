@@ -175,7 +175,8 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 			transop_robin = create_robin_transfer(localizer, bilifo, source_space, omega_star_space, range_space, pou)
 			ldict["robin_transfer"] = transop_robin
 
-			ldict["psi"] = localizer.to_space(NumpyVectorArray(bilifo._matrix.T), omega_star_space, source_space).data.T
+			#ldict["psi"] = localizer.to_space(NumpyVectorArray(bilifo._matrix.T), omega_star_space, source_space).data.T
+			ldict["local_op_matrix"] = bilifo._matrix
 			
 			#lokale Shift-Loesung mit f(Robin)
 			lrhs = ld.rhs.assemble(mus)
