@@ -313,11 +313,10 @@ def ungleichungk3(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), clo
 				term = u_dif.data.T - B.dot(B.conj().T).dot(M_sparse.dot(u_dif.data.T))
 				u_i = localizer.globalize_vector_array(NumpyVectorArray(term.T), range_space)
 				sum += u_i
-			rs1 = gq["continuity_constant"]/gq["inf_sup_constant"]* gq["full_norm"](sum)
 			ls.append(gq["full_norm"](u-ru)[0]/gq["full_norm"](u)[0])
-			rs2.append((gq["continuity_constant"]/gq["inf_sup_constant"])*4*np.sqrt(rssum2))
+			rs2.append(gq["continuity_constant"]/gq["inf_sup_constant"]* gq["full_norm"](sum))
 		return np.mean(ls), np.mean(rs2)
-	pool = mp.Pool(10)
+	pool = mp.Pool()
 	results = pool.map(cube,  krang)
 	means_ls = np.array(results).T[0].tolist()
 	means_rs2 = np.array(results).T[1].tolist()
