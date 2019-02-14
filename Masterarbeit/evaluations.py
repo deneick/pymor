@@ -294,6 +294,7 @@ def ungleichungk3(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), clo
 			print j,
 			sys.stdout.flush()
 			bases = create_bases(gq, lq, num_testvecs=20, transfer = 'robin', target_accuracy = acc, calC = False)
+			ru = reconstruct_solution(gq,lq,bases)
 			sum = NumpyVectorArray(u.data*0)
 			for space in gq["spaces"]:
 				ldict = lq[space]
