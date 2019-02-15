@@ -325,6 +325,61 @@ def ungleichungk3(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), clo
 	if returnvals:
 		return [krang, means_ls, means_rs2]
 
+def ungleichungk4(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), cloc0 = 0, cloc1 = 1, cloc2 = 1, returnvals=False, resolution = 100, coarse_grid_resolution = 10):
+	p = helmholtz(boundary = boundary)	
+	global cube
+	def cube(k):
+		print k
+		cglob = -1j*k
+		cloc = cloc0+ cloc1*k+cloc2*k**2
+		mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+		resolution  = int(np.ceil(float(k*1.5+50)/coarse_grid_resolution)*coarse_grid_resolution)
+		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calT = True, calQ = True)
+		calculate_continuity_constant(gq, lq)
+		calculate_inf_sup_constant2(gq, lq)	
+		calculate_lambda_min(gq, lq)
+		calculate_csis(gq,lq)	
+		calculate_Psi_norm(gq,lq)
+		d = gq["d"]
+		u = d.solve(mus)
+		ls = []
+		rs2 = []
+		for j in range(it):
+			print j,
+			sys.stdout.flush()
+			bases = create_bases(gq, lq, num_testvecs=20, transfer = 'robin', target_accuracy = acc, calC = False)
+			ru = reconstruct_solution(gq,lq,bases)
+			sum = 0
+			for space in gq["spaces"]:
+				ldict = lq[space]
+				basis = bases[space]
+				M = ldict["range_product"]._matrix
+				S = ldict["source_product"]._matrix
+				M_sparse = scipy.sparse.csr_matrix(M)
+				T = ldict["transfer_matrix_robin"]
+				B = basis._array.T
+				range_space = ldict["range_space"]
+				localizer = gq["localizer"]
+				pou = gq["pou"]
+				u_loc = pou[range_space](localizer.localize_vector_array(u, range_space))
+				u_s = ldict["local_solution_robin"]
+				u_dif = u_loc-u_s
+				term = u_dif.data.T - B.dot(B.conj().T).dot(M_sparse.dot(u_dif.data.T))
+				u_i = NumpyVectorArray(term.T)
+				local_norm = induced_norm(ldict["range_product"])
+				sum += local_norm(u_i)
+			ls.append(gq["full_norm"](u-ru)[0]/gq["full_norm"](u)[0])
+			rs2.append(gq["continuity_constant"]/gq["inf_sup_constant"]* sum/gq["full_norm"](u))
+		return np.mean(ls), np.mean(rs2)
+	pool = mp.Pool()
+	results = pool.map(cube,  krang)
+	means_ls = np.array(results).T[0].tolist()
+	means_rs2 = np.array(results).T[1].tolist()
+	data = np.vstack([krang, means_ls, means_rs2]).T
+	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
+	if returnvals:
+		return [krang, means_ls, means_rs2]
+
 def ungleichungk2notmp(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.2), cloc0 = 0, cloc1 = 1, cloc2 = 1, returnvals=False, resolution = 100, coarse_grid_resolution = 10):
 	p = helmholtz(boundary = boundary)	
 	LS = []
