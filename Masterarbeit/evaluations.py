@@ -314,7 +314,7 @@ def ungleichungk3(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), clo
 				u_i = localizer.globalize_vector_array(NumpyVectorArray(term.T), range_space)
 				sum += u_i
 			ls.append(gq["full_norm"](u-ru)[0]/gq["full_norm"](u)[0])
-			rs2.append(gq["continuity_constant"]/gq["inf_sup_constant"]* gq["full_norm"](sum))
+			rs2.append(gq["continuity_constant"]/gq["inf_sup_constant"]* gq["full_norm"](sum)/gq["full_norm"](u))
 		return np.mean(ls), np.mean(rs2)
 	pool = mp.Pool()
 	results = pool.map(cube,  krang)
