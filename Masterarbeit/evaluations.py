@@ -300,7 +300,7 @@ def ungleichungkfull(it, acc, boundary, save, krang  = np.arange(0.1,10.1,0.1), 
 	pool = mp.Pool()
 	results = pool.map(cube,  krang)
 	means = np.mean(results, axis = 1)
-	data = np.vstack([krang, means.T])
+	data = np.vstack([krang, means.T]).T
 	open(save, "w").writelines([" ".join(map(str, v)) + "\n" for v in data])
 	if returnvals:
 		return means
