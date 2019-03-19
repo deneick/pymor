@@ -85,7 +85,7 @@ class NumpyLocalizer(ImmutableInterface):
                 offset = np.sum(dims[:i]) if i else 0
                 r.data[:, self.subspaces[ind[i]]] = va.data[:, offset:offset + dims[i]]
 
-        return NumpyVectorSpace.make_array(r, copy=False)
+        return r.copy()
 
     def globalize_vector_array(self, va, ind, sub_ind=None):
         return self.globalize_vector_array2(va.real, ind, sub_ind) +self.globalize_vector_array2(va.imag, ind, sub_ind)*1j

@@ -2,7 +2,7 @@ import numpy as np
 
 from pymor.operators.constructions import LincombOperator, VectorFunctional
 from pymor.operators.numpy import NumpyMatrixOperator
-from pymor.vectorarrays.numpy import NumpyVectorArray
+from pymor.vectorarrays.numpy import NumpyVectorArray, NumpyVectorSpace
 
 import scipy.sparse
 from mybmat import mybmat
@@ -130,8 +130,8 @@ class LRBOperatorProjection:
     def _generate_reduced_localized_operators(self):
         for key in self.reduction_todo_list:
             self.reduced_localized_operators[key] \
-                = self.localized_operators[key].projected(self.range_bases[self.range_spaces.index(key[2])],
-                                                          self.source_bases[self.source_spaces.index(key[1])])
+                = NumpyMatrixOperator(self.localized_operators[key].apply2(self.range_bases[self.range_spaces.index(key[2])],
+self.source_bases[self.source_spaces.index(key[1])]))	#self.localized_operators[key].projected(self.range_bases[self.range_spaces.index(key[2])],self.source_bases[self.source_spaces.index(key[1])])
 
         self.reduction_todo_list = set()
 
@@ -147,7 +147,7 @@ class LRBOperatorProjection:
         assert op.linear and not op.parametric
 
         mats = [[None if (op.uid, source_space, range_space) not in self.reduced_localized_operators else
-                 self.reduced_localized_operators[(op.uid, source_space, range_space)]._matrix
+                 self.reduced_localized_operators[(op.uid, source_space, range_space)].matrix
                  for source_space in self.source_spaces]
                 for range_space in self.range_spaces]
         result =  NumpyMatrixOperator(scipy.sparse.bmat(mats).tocsc())
@@ -170,5 +170,7 @@ class LRBOperatorProjection:
 
         mats = [project_block(ids, basis)
                 for ids, basis in zip(self.range_spaces, self.range_bases)]
+        #import ipdb
+        #ipdb.set_trace()
+        return NumpyVectorSpace.make_array(np.concatenate(mats, axis=1))
 
-        return VectorFunctional(NumpyVectorArray(np.concatenate(mats, axis=1), copy=False))

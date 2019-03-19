@@ -14,48 +14,48 @@ import numpy as np
 import copy
 import scipy
 from pymor.operators.constructions import VectorFunctional
-from pymor.vectorarrays.numpy import NumpyVectorArray
+from pymor.vectorarrays.numpy import NumpyVectorArray, NumpyVectorSpace
 from pymor.operators.numpy import NumpyMatrixOperator
 #from pymor.operators.cg import L2ProductP1, DiffusionOperatorP1
 
 #Dirichlet-Transferoperator
 def create_dirichlet_transfer(localizer, local_op, rhsop, source_space, training_space, range_space, pou):
 	def transfer(va):
-		range_solution = localizer.to_space(local_op.apply_inverse(-rhsop.apply(NumpyVectorArray(va))), training_space, range_space)
-		return pou[range_space](range_solution)
+		range_solution = localizer.to_space(local_op.apply_inverse(-rhsop.apply(NumpyVectorSpace.make_array(va))), training_space, range_space)
+		return pou[range_space](range_solution).data
 	cavesize = len(localizer.join_spaces(source_space))
 	rangesize = len(localizer.join_spaces(range_space))
-	return NumpyGenericOperator(transfer, cavesize, rangesize, linear=True)
+	return NumpyGenericOperator(transfer, dim_source = cavesize, dim_range = rangesize, linear=True)
 
 #Dirichlet-Loesungsoperator
 def create_dirichlet_solop(localizer, local_op, rhsop, source_space, training_space):
 	def solve(va):
-		solution = local_op.apply_inverse(-rhsop.apply(NumpyVectorArray(va)))
-		return solution
+		solution = local_op.apply_inverse(-rhsop.apply(NumpyVectorSpace.make_array(va)))
+		return solution.data
 	cavesize = len(localizer.join_spaces(source_space))
 	rangesize = len(localizer.join_spaces(training_space))
-	return NumpyGenericOperator(solve, cavesize, rangesize, linear=True)
+	return NumpyGenericOperator(solve, dim_source = cavesize, dim_range = rangesize, linear=True)
 
 #Robin-Transferoperator
 def create_robin_transfer(localizer, bilifo, source_space, omega_star_space, range_space, pou):
 	def transfer(va):
-		g = localizer.to_space(NumpyVectorArray(va), source_space, omega_star_space)			
-		solution = StationaryDiscretization(bilifo, VectorFunctional(g), cache_region=None).solve()
+		g = localizer.to_space(NumpyVectorSpace.make_array(va), source_space, omega_star_space)			
+		solution = StationaryDiscretization(bilifo, g, cache_region=None).solve()
 		range_solution = localizer.to_space(solution, omega_star_space, range_space)
-		return pou[range_space](range_solution)
+		return pou[range_space](range_solution).data
 	cavesize = len(localizer.join_spaces(source_space))
 	rangesize = len(localizer.join_spaces(range_space))
-	return NumpyGenericOperator(transfer, cavesize, rangesize, linear=True)
+	return NumpyGenericOperator(transfer, dim_source = cavesize, dim_range = rangesize, linear=True)
 
 #Robin-Loesungsoperator
 def create_robin_solop(localizer, bilifo, source_space, omega_star_space):
 	def solve(va):
-		g = localizer.to_space(NumpyVectorArray(va), source_space, omega_star_space)			
-		solution = StationaryDiscretization(bilifo, VectorFunctional(g), cache_region=None).solve()
-		return solution
+		g = localizer.to_space(NumpyVectorSpace.make_array(va), source_space, omega_star_space)			
+		solution = StationaryDiscretization(bilifo, g, cache_region=None).solve()
+		return solution.data
 	cavesize = len(localizer.join_spaces(source_space))
 	rangesize = len(localizer.join_spaces(omega_star_space))
-	return NumpyGenericOperator(solve, cavesize, rangesize, linear=True)
+	return NumpyGenericOperator(solve, dim_source = cavesize, dim_range = rangesize, linear=True)
 
 def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None, calT = False, calQ = False, dof_codim = 2, localization_codim = 2, discretizer = None):
 	print("localizing problem")
@@ -168,21 +168,19 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 			global_dofnrsext = -100000000* np.ones(shape=(d.solution_space.dim,))
 			global_dofnrsext[ldata['grid'].parent_indices(dof_codim)] = np.array(range(ndofsext))
 			lvecext = localizer.localize_vector_array(NumpyVectorSpace.make_array(global_dofnrsext), omega_star_space).data[0]
-			import ipdb
-			ipdb.set_trace()
 
 			#Robin Transferoperator:
 			bilifo = NumpyMatrixOperator(lop.matrix[:,lvecext][lvecext,:])
 			transop_robin = create_robin_transfer(localizer, bilifo, source_space, omega_star_space, range_space, pou)
 			ldict["robin_transfer"] = transop_robin
 
-			#ldict["psi"] = localizer.to_space(NumpyVectorArray(bilifo._matrix.T), omega_star_space, source_space).data.T
-			ldict["local_op_matrix"] = bilifo._matrix
+			#ldict["psi"] = localizer.to_space(NumpyVectorSpace.make_array(bilifo._matrix.T), omega_star_space, source_space).data.T
+			ldict["local_op_matrix"] = bilifo.matrix
 			
 			#lokale Shift-Loesung mit f(Robin)
 			lrhs = ld.rhs.assemble(mus)
-			llrhs = NumpyMatrixOperator(lrhs.matrix[:,lvecext.astype(int)])
-			lrhs_f = llrhs._matrix
+			llrhs = NumpyMatrixOperator(lrhs.matrix[lvecext.astype(int)])
+			lrhs_f = llrhs.matrix
 			local_solution = StationaryDiscretization(bilifo, llrhs, cache_region=None).solve()
 			ldict["local_sol2"] = local_solution
 			local_solution = localizer.to_space(local_solution, omega_star_space, range_space)
@@ -195,14 +193,14 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 				T_range_size = transop_robin.range.dim
 				T_robin = np.zeros((T_range_size, T_source_size), dtype = complex)
 				for i in range(T_source_size):
-					ei = NumpyVectorArray(np.eye(1,T_source_size,i))
+					ei = NumpyVectorSpace.make_array(np.eye(1,T_source_size,i))
 					ti = transop_robin.apply(ei)
 					T_robin.T[i] = ti._array
 				ldict["transfer_matrix_robin"] = T_robin
 
 			#Konstruktion der Produkte:
 			range_k = localizer.localize_operator(k_product, range_space, range_space)
-			omstar_k = LincombOperator((NumpyMatrixOperator(ld.products["h1_semi"].assemble()._matrix[:,lvecext][lvecext,:]),NumpyMatrixOperator(ld.products["l2"].assemble()._matrix[:,lvecext][lvecext,:])),(1,mus["k"]**2)).assemble()
+			omstar_k = LincombOperator((NumpyMatrixOperator(ld.products["h1_semi"].assemble().matrix[:,lvecext][lvecext,:]),NumpyMatrixOperator(ld.products["l2"].assemble().matrix[:,lvecext][lvecext,:])),(1,mus["k"]**2)).assemble()
 
 
 			ldict["omega_star_product"] = omstar_k
@@ -215,15 +213,15 @@ def localize_problem(p, coarse_grid_resolution, fine_grid_resolution, mus = None
 				Q_r_range_size = solution_op_robin.range.dim
 				Q_r = np.zeros((Q_r_range_size, Q_r_source_size), dtype = complex)
 				for i in range(Q_r_source_size):
-					ei = NumpyVectorArray(np.eye(1,Q_r_source_size,i))
+					ei = NumpyVectorSpace.make_array(np.eye(1,Q_r_source_size,i))
 					qi = solution_op_robin.apply(ei)
 					Q_r.T[i] = qi._array
 				ldict["solution_matrix_robin"] = Q_r
-				source_Q_r_product = NumpyMatrixOperator(Q_r.T.conj().dot(omstar_k._matrix.dot(Q_r)))
+				source_Q_r_product = NumpyMatrixOperator(Q_r.T.conj().dot(omstar_k.matrix.dot(Q_r)))
 				ldict["source_product"] = source_Q_r_product
 
 			lproduct = localizer.localize_operator(full_l2_product, source_space, source_space)
-			lmat = lproduct._matrix.tocoo()
+			lmat = lproduct.matrix.tocoo()
 			lmat.data = np.array([4./6.*diameter if (row == col) else diameter/6. for row, col in zip(lmat.row, lmat.col)])
 			ldict["source_product"] = NumpyMatrixOperator(lmat.tocsc())
 			#ldict["source_product"] = NumpyMatrixOperator(scipy.sparse.csr_matrix(np.identity(len(localizer.join_spaces(source_space)))))
@@ -246,7 +244,7 @@ def getsubgrid(grid, xpos, ypos, coarse_grid_resolution, xsize=2, ysize=2):
     def filter(elem):
         return (xmin <= elem[0] <= xmax) and (ymin <= elem[1] <= ymax)
 
-    mask = map(filter, grid.centers(0))
+    mask = [filter(e) for e in grid.centers(0)] #map(filter, grid.centers(0))
     indices = np.nonzero(mask)[0]
     return SubGrid(grid, indices)	
 

@@ -352,7 +352,8 @@ def test1(transfer = 'robin',boundary = 'dirichlet', n=15,k=6., cloc=6., title =
 	print(gq["full_norm"](dif)[0]/gq["full_norm"](u)[0])
 	d.visualize((dif.real, dif.imag, u.real, u.imag, ru.real, ru.imag), legend = ('dif.real', 'dif.imag', 'u.real', 'u.imag', 'ru.real', 'ru.imag'), separate_colorbars = True, title = title)
 
-def test2(transfer = 'robin',boundary = 'dirichlet', acc=1e-2,k=6.,cglob= 6, cloc=6., title = 'test', resolution = 100, coarse_grid_resolution = 10):
+def test2(transfer = 'robin',boundary = 'dirichlet', acc=1e-2,k=6.,cloc=6., title = 'test', resolution = 100, coarse_grid_resolution = 10):
+	cglob = -1j*k
 	mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
 	p = helmholtz(boundary = boundary)
 	gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus, calQ = True)

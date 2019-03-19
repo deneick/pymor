@@ -22,7 +22,7 @@ def calculate_lambda_min(gq, lq):
 	spaces = gq["spaces"]
 	for space in spaces:
 		ldict = lq[space]
-		mat = ldict["source_product"]._matrix
+		mat = ldict["source_product"].matrix
 		val = scipy.sparse.linalg.eigsh(mat, return_eigenvectors = False, k=1, which="SM", tol = 1e-3)[0]
 		#val = np.abs(np.sort(np.linalg.eig(mat)[0])[0])
 		ldict["lambda_min"] = val
@@ -37,15 +37,15 @@ def calculate_inf_sup_constant(gq,lq, bases):#, mus):
 	spaces = gq["spaces"]
 	localizer = gq["localizer"]
 	operator_reductor = LRBOperatorProjection(op, rhs, localizer, spaces, bases, spaces, bases)
-	A = operator_reductor.get_reduced_operator()._matrix
+	A = operator_reductor.get_reduced_operator().matrix
 
 	#H10 = gq["h1_0_prod"]
 	#operator_reductor0 = LRBOperatorProjection(H10, rhs, localizer, spaces, bases, spaces, bases)
-	#Y = operator_reductor0.get_reduced_operator()._matrix
+	#Y = operator_reductor0.get_reduced_operator().matrix
 	H1 = gq["k_product"]
 	operator_reductor = LRBOperatorProjection(H1, rhs, localizer, spaces, bases, spaces, bases)
-	X = operator_reductor.get_reduced_operator()._matrix
-	Y = operator_reductor.get_reduced_operator()._matrix
+	X = operator_reductor.get_reduced_operator().matrix
+	Y = operator_reductor.get_reduced_operator().matrix
 
 	Yinv = sp.factorized(Y.astype(complex))
 	def mv(v):
@@ -63,8 +63,8 @@ def calculate_inf_sup_constant(gq,lq, bases):#, mus):
 #Berechne inf-sup Konstante beta_h bezueglich des Finite-Elemente-Raumes (vgl. S.9):
 def calculate_inf_sup_constant2(gq,lq):	
 	op = gq["op"]
-	A = op._matrix
-	H1 = gq["k_product"]._matrix
+	A = op.matrix
+	H1 = gq["k_product"].matrix
 	Y = H1
 	X = H1
 
@@ -95,9 +95,9 @@ def calculate_inf_sup_constant2(gq,lq):
 
 #Berechne Stetigkeitskonstante (vgl. S.9):
 def calculate_continuity_constant(gq, lq):#, mus):
-	A = gq["op"]._matrix
-	#A = gq["d"].operator.assemble(mus)._matrix	
-	H1 = gq["k_product"]._matrix
+	A = gq["op"].matrix
+	#A = gq["d"].operator.assemble(mus).matrix	
+	H1 = gq["k_product"].matrix
 	Y = H1
 	X = H1
 	
@@ -136,7 +136,7 @@ def calculate_csis(gq, lq):
 		else:
 			x = np.linalg.lstsq(T, u_s.data.T)[0]
 			y = T.dot(x)
-			y_p = NumpyVectorArray(y.T)
+			y_p = NumpyVectorSpace.make_array(y.T)
 			y_p = y_p.lincomb(1/norm(y_p).real)
 			result = np.sqrt(norm(u_s).real[0]**2/(norm(u_s).real[0]**2 - product.apply2(u_s, y_p).real[0][0]**2))
 		ldict["csi"] = result
@@ -161,7 +161,7 @@ def calculate_testlimit(gq, lq, space, num_testvecs, target_accuracy, max_failur
 	coarse_grid_resolution = gq["coarse_grid_resolution"]
 	tol_i = target_accuracy*gq["inf_sup_constant"]/( (coarse_grid_resolution -1) *4 * gq["continuity_constant"]) / (ldict["csi"]*ldict["Psi_norm"])
 	#print "tol_i: ", tol_i
-	local_failure_tolerance = max_failure_probability / ( (coarse_grid_resolution -1)*4. )
+	local_failure_tolerance = max_failure_probability / ( (coarse_grid_resolution -1)*4. )  #**2??
 	testlimit_zeta = testlimit(
                 failure_tolerance=local_failure_tolerance,
                 dim_S=ldict["robin_transfer"].source.dim,
@@ -177,8 +177,8 @@ def calculate_Psi_norm(gq,lq):
 	l = gq["localizer"]
 	for space in spaces:
 		ldict = lq[space]
-		H1om = ldict["omega_star_product"]._matrix
-		MS = ldict["source_product"]._matrix
+		H1om = ldict["omega_star_product"].matrix
+		MS = ldict["source_product"].matrix
 
 		Q = ldict["solution_matrix_robin"]
 		M = Q.T.conj().dot(H1om.dot(Q))
@@ -195,7 +195,7 @@ def calculate_Psi_norm_d(gq,lq):
 	for space in spaces:
 		ldict = lq[space]
 		mat1 = ldict["omega_star_energy_product"]
-		mat1 = mat1._matrix
+		mat1 = mat1.matrix
 		mat2 = ldict["source_product"]
 	
 		omega_star_space = ldict["omega_star_space"]
@@ -203,7 +203,7 @@ def calculate_Psi_norm_d(gq,lq):
 
 		source_space = ldict["source_space"]
 		import ipdb; ipdb.set_trace()
-		foo1 = NumpyVectorArray(np.identity(omega_star_size))
+		foo1 = NumpyVectorSpace.make_array(np.identity(omega_star_size))
 		foo2 = l.to_space(foo1, omega_star_space, source_space)
 		foo3 = mat2.apply(foo2)
 		foo4 = l.to_space(foo3, source_space, omega_star_space)
@@ -221,8 +221,8 @@ def calculate_Psi_norm_r(gq,lq):
 	for space in spaces:
 		ldict = lq[space]
 		mat1 = ldict["omega_star_energy_product"]
-		mat1 = mat1._matrix
-		mat2 = ldict["source_product"]._matrix
+		mat1 = mat1.matrix
+		mat2 = ldict["source_product"].matrix
 
 		omega_star_space = ldict["omega_star_space"]
 		omega_star_size = len(l.join_spaces(omega_star_space))
@@ -240,10 +240,10 @@ def calculate_Psi_norm_r(gq,lq):
 
 def calculate_continuity_constant2(gq, lq, bases):#, mus):
 	op = gq["op"]
-	A = op._matrix
-	#A = gq["d"].operator.assemble(mus)._matrix	
-	H1 = gq["h1_prod"]._matrix
-	H1_0 = gq["h1_0_prod"]._matrix
+	A = op.matrix
+	#A = gq["d"].operator.assemble(mus).matrix	
+	H1 = gq["h1_prod"].matrix
+	H1_0 = gq["h1_0_prod"].matrix
 	Y = H1
 	X = H1
 
@@ -261,14 +261,14 @@ def calculate_continuity_constant2(gq, lq, bases):#, mus):
 	spaces = gq["spaces"]
 	localizer = gq["localizer"]
 	operator_reductor = LRBOperatorProjection(op, rhs, localizer, spaces, bases, spaces, bases)
-	A = operator_reductor.get_reduced_operator()._matrix
+	A = operator_reductor.get_reduced_operator().matrix
 
 	H10 = gq["h1_0_prod"]
 	operator_reductor0 = LRBOperatorProjection(H10, rhs, localizer, spaces, bases, spaces, bases)
-	Y = operator_reductor0.get_reduced_operator()._matrix
+	Y = operator_reductor0.get_reduced_operator().matrix
 	H1 = gq["h1_prod"]
 	operator_reductor = LRBOperatorProjection(H1, rhs, localizer, spaces, bases, spaces, bases)
-	X = operator_reductor.get_reduced_operator()._matrix
+	X = operator_reductor.get_reduced_operator().matrix
 
 	Yinv = sp.factorized(Y.astype(complex))
 	def mv(v):

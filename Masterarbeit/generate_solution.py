@@ -1,8 +1,8 @@
 from pymor.discretizations.basic import StationaryDiscretization
 from lrb_operator_projection import LRBOperatorProjection
-#from pymor.algorithms.basisextension import *
+from pymor.algorithms.gram_schmidt import *
 from pymor.operators.constructions import induced_norm
-from pymor.vectorarrays.numpy import NumpyVectorArray
+from pymor.vectorarrays.numpy import NumpyVectorArray, NumpyVectorSpace
 import numpy as np
 import scipy
 from constants import *
@@ -43,9 +43,9 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 		testlimit = calculate_testlimit(gq, lq, space, num_testvecs, target_accuracy, max_failure_probability)	
 	
 		#Generierung der Testvektoren:
-		testvecs = transop.apply(NumpyVectorArray(np.random.normal(size=transop.source.dim)))
+		testvecs = transop.apply(NumpyVectorSpace.make_array(np.random.normal(size=transop.source.dim)))
 		for i in range(num_testvecs-1):
-			testvecs.append(transop.apply(NumpyVectorArray(np.random.normal(size=(1, transop.source.dim)))))
+			testvecs.append(transop.apply(NumpyVectorSpace.make_array(np.random.normal(size=(1, transop.source.dim)))))
 		maxnorm = float('inf')
 		#print "Testlimit: ", testlimit
 		progress = 1.
@@ -55,7 +55,7 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 			#normalverteilter Zufallsvektor r:
 			vec = np.random.normal(size=(1,transop.source.dim))+1j*np.random.normal(size=(1,transop.source.dim))
 			#u_t = T(r)
-			u_t = transop.apply(NumpyVectorArray(vec))
+			u_t = transop.apply(NumpyVectorSpace.make_array(vec))
 			basis_length = len(basis)
 			#B <- B+T(r)
 			basis.append(u_t)
@@ -63,7 +63,7 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 			gram_schmidt(basis, offset=basis_length, product = product, copy = False)
 			B = basis._array.T
 			#M <- t- P_span(B) t /t in M
-			testvecs._array -= B.dot(B.conj().T.dot(product._matrix.dot(testvecs._array.T))).T
+			testvecs._array -= B.dot(B.conj().T.dot(product.matrix.dot(testvecs._array.T))).T
 			maxnorm_new = np.max(np.abs(norm(testvecs)))
 			progress = maxnorm-maxnorm_new
 			maxnorm = maxnorm_new
@@ -87,11 +87,11 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 				transop = ldict["dirichlet_transfer"]
 			else: 
 				transop = ldict["robin_transfer"]
-			testvecs = transop.apply(NumpyVectorArray(np.random.normal(size=transop.source.dim)))
+			testvecs = transop.apply(NumpyVectorSpace.make_array(np.random.normal(size=transop.source.dim)))
 			for i in range(num_testvecs-1):
-				testvecs.append(transop.apply(NumpyVectorArray(np.random.normal(size=(1, transop.source.dim)))))
+				testvecs.append(transop.apply(NumpyVectorSpace.make_array(np.random.normal(size=(1, transop.source.dim)))))
 			B = basis._array.T
-			testvecs._array -= B.dot(B.conj().T.dot(product._matrix.dot(testvecs._array.T))).T
+			testvecs._array -= B.dot(B.conj().T.dot(product.matrix.dot(testvecs._array.T))).T
 			maxnorm = np.max(np.abs(norm(testvecs)))
 			progress = 1.
 			while (maxnorm > testlimit and progress > 1e-16):
@@ -101,12 +101,12 @@ def create_bases(gq, lq, num_testvecs, transfer = 'dirichlet', testlimit = None,
 				if (progress <0):
 					raise Exception
 				vec = np.random.normal(size=(1,transop.source.dim))+1j*np.random.normal(size=(1,transop.source.dim))
-				u_t = transop.apply(NumpyVectorArray(vec))
+				u_t = transop.apply(NumpyVectorSpace.make_array(vec))
 				basis_length = len(basis)
 				basis.append(u_t)
 				gram_schmidt(basis, offset=basis_length, product = product, copy = False)
 				B = basis._array.T
-				testvecs._array -= B.dot(B.conj().T.dot(product._matrix.dot(testvecs._array.T))).T
+				testvecs._array -= B.dot(B.conj().T.dot(product.matrix.dot(testvecs._array.T))).T
 				maxnorm_new = np.max(np.abs(norm(testvecs)))
 				progress = maxnorm-maxnorm_new
 				maxnorm = maxnorm_new
@@ -139,7 +139,7 @@ def create_bases3(gq, lq, basis_size, transfer = 'dirichlet', silent = True):
 		global cube
 		def cube(i):
 			vec = np.random.normal(size=(1,transop.source.dim))+1j*np.random.normal(size=(1,transop.source.dim))	
-			u_t = transop.apply(NumpyVectorArray(vec))
+			u_t = transop.apply(NumpyVectorSpace.make_array(vec))
 			return u_t
 		pool = mp.Pool(processes=3)
 		basislist = pool.map(cube,  range(basis_size))
@@ -171,7 +171,7 @@ def create_bases2(gq, lq, basis_size, transfer = 'dirichlet', silent = True):
 		for i in range(basis_size):
 			#normalverteilter Zufallsvektor r:
 			vec = np.random.normal(size=(1,transop.source.dim))+1j*np.random.normal(size=(1,transop.source.dim))	
-			u_t = transop.apply(NumpyVectorArray(vec))
+			u_t = transop.apply(NumpyVectorSpace.make_array(vec))
 			basis_length = len(basis)
 			#B <- B + T(r)
 			basis.append(u_t)
