@@ -83,7 +83,7 @@ def gram_schmidt(A, product=None, atol=1e-13, rtol=1e-13, offset=0,
                 for j in range(i):
                     if j in remove:
                         continue
-                    p = A[i].pairwise_inner(A[j], product)[0]
+                    p = A[j].pairwise_inner(A[i], product)[0]
                     A[i].axpy(-p, A[j])
 
                 # calculate new norm
