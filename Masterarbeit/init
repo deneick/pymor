@@ -1,0 +1,33 @@
+export PATH_TO_VIRTUALENV=~/pymor-virtualenv
+source $PATH_TO_VIRTUALENV/bin/activate
+cd Schreibtisch/buhr_exponential_convergence
+export SIMDB_PATH=~/pymor-simdb
+
+
+
+
+
+sudo mount -t vboxsf shared /shared
+
+ipython --pdb Test.py
+
+
+ssh -Y d_eick05@jaina.uni-muenster.de
+
+
+scp -r d_eick05@JAINA.uni-muenster.de:/data/home/d_eick05/pymor/Masterarbeit/dats ~
+
+sudo openconnect vpn.uni-muenster.de
+
+
+git add .
+git commit -m "mes"
+git push origin Masterarbeit
+
+git stash save --keep-index
+git pull
+
+rm -r ~/pymor/Masterarbeit/dats/*
+
+
+export OMP_NUM_THREADS=1
