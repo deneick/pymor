@@ -1,0 +1,331 @@
+from evaluations import *
+acc =1e-2
+boundary = 'robin'
+resolution = 100
+coarse_grid_resolution = 10
+p = helmholtz(boundary = boundary)	
+k= 6.
+cglob = -1j*k
+cloc = 0
+mus = {'k': k, 'c_glob': cglob, 'c_loc': cloc}
+gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus, calT = True, calQ = True)
+calculate_continuity_constant(gq, lq)
+calculate_inf_sup_constant2(gq, lq)	
+calculate_lambda_min(gq, lq)
+calculate_csis(gq,lq)	
+d = gq["d"]
+u = d.solve(mus)
+bases = create_bases(gq, lq, num_testvecs=20, transfer = 'robin', target_accuracy = acc, calC = False)
+ru = reconstruct_solution(gq,lq,bases)
+
+k_prod = gq["k_product"]
+norm = induced_norm(k_prod)
+ls = norm(u-ru)
+
+sum = NumpyVectorArray(u.data*0)
+for space in gq["spaces"]:
+	ldict = lq[space]
+	basis = bases[space]
+	M = ldict["range_product"]._matrix
+	S = ldict["source_product"]._matrix
+	M_sparse = scipy.sparse.csr_matrix(M)
+	T = ldict["transfer_matrix_robin"]
+	B = basis._array.T
+	range_space = ldict["range_space"]
+	localizer = gq["localizer"]
+	pou = gq["pou"]
+	u_loc = pou[range_space](localizer.localize_vector_array(u, range_space))
+	u_s = ldict["local_solution_robin"]
+	u_dif = u_loc-u_s
+	term = u_dif.data.T - B.dot(B.conj().T).dot(M_sparse.dot(u_dif.data.T))
+	u_i = localizer.globalize_vector_array(NumpyVectorArray(term.T), range_space)
+	sum += u_i
+rs1 = gq["continuity_constant"]/gq["inf_sup_constant"]* norm(sum)
+
+sum = 0
+for space in gq["spaces"]:
+	ldict = lq[space]
+	basis = bases[space]
+	M = ldict["range_product"]._matrix
+	S = ldict["source_product"]._matrix
+	M_sparse = scipy.sparse.csr_matrix(M)
+	T = ldict["transfer_matrix_robin"]
+	B = basis._array.T
+	range_space = ldict["range_space"]
+	localizer = gq["localizer"]
+	pou = gq["pou"]
+	u_loc = pou[range_space](localizer.localize_vector_array(u, range_space))
+	u_s = ldict["local_solution_robin"]
+	u_dif = u_loc-u_s
+	term = u_dif.data.T - B.dot(B.conj().T).dot(M_sparse.dot(u_dif.data.T))
+	u_i = NumpyVectorArray(term.T)
+	local_norm = induced_norm(ldict["range_product"])
+	sum += local_norm(u_i)
+rs2 = gq["continuity_constant"]/gq["inf_sup_constant"]* sum
+
+sum = 0
+for space in gq["spaces"]:
+	ldict = lq[space]
+	basis = bases[space]
+	M = ldict["range_product"]._matrix
+	S = ldict["source_product"]._matrix
+	M_sparse = scipy.sparse.csr_matrix(M)
+	T = ldict["transfer_matrix_robin"]
+	B = basis._array.T
+	range_space = ldict["range_space"]
+	omega_star_space = ldict["omega_star_space"]
+	localizer = gq["localizer"]
+	pou = gq["pou"]
+	u_loc = localizer.localize_vector_array(u, omega_star_space)
+	u_s = ldict["local_sol2"]
+	u_dif = u_loc-u_s
+	u_i = u_dif
+	T1 = T - B.dot(B.conj().T).dot(M_sparse.dot(T))
+	maxval = operator_svd2(T1, S, M_sparse)[0][0]
+	local_norm = induced_norm(ldict["omega_star_product"])
+	sum += maxval*local_norm(u_i)
+rs3 = gq["continuity_constant"]/gq["inf_sup_constant"]* sum
+
+sum = 0
+for space in gq["spaces"]:
+	ldict = lq[space]
+	basis = bases[space]
+	M = ldict["range_product"]._matrix
+	S = ldict["source_product"]._matrix
+	M_sparse = scipy.sparse.csr_matrix(M)
+	T = ldict["transfer_matrix_robin"]
+	B = basis._array.T
+	range_space = ldict["range_space"]
+	omega_star_space = ldict["omega_star_space"]
+	localizer = gq["localizer"]
+	pou = gq["pou"]
+	u_loc = localizer.localize_vector_array(u, omega_star_space)
+	T1 = T - B.dot(B.conj().T).dot(M_sparse.dot(T))
+	maxval = operator_svd2(T1, S, M_sparse)[0][0]
+	local_norm = induced_norm(ldict["omega_star_product"])
+	sum += maxval*local_norm(u_loc)*ldict["csi"]
+rs4 = gq["continuity_constant"]/gq["inf_sup_constant"]* sum
+
+sum1 = 0
+sum2 = 0
+for space in gq["spaces"]:
+	ldict = lq[space]
+	basis = bases[space]
+	M = ldict["range_product"]._matrix
+	S = ldict["source_product"]._matrix
+	M_sparse = scipy.sparse.csr_matrix(M)
+	T = ldict["transfer_matrix_robin"]
+	B = basis._array.T
+	range_space = ldict["range_space"]
+	omega_star_space = ldict["omega_star_space"]
+	localizer = gq["localizer"]
+	pou = gq["pou"]
+	u_loc = localizer.localize_vector_array(u, omega_star_space)
+	T1 = T - B.dot(B.conj().T).dot(M_sparse.dot(T))
+	maxval = operator_svd2(T1, S, M_sparse)[0][0]
+	local_norm = induced_norm(ldict["omega_star_product"])
+	sum1 += maxval**2*ldict["csi"]**2
+	sum2 += local_norm(u_loc)**2
+rs5 = gq["continuity_constant"]/gq["inf_sup_constant"]* np.sqrt(sum1) * np.sqrt(sum2)
+
+sum = 0
+for space in gq["spaces"]:
+	ldict = lq[space]
+	basis = bases[space]
+	M = ldict["range_product"]._matrix
+	S = ldict["source_product"]._matrix
+	M_sparse = scipy.sparse.csr_matrix(M)
+	T = ldict["transfer_matrix_robin"]
+	B = basis._array.T
+	range_space = ldict["range_space"]
+	omega_star_space = ldict["omega_star_space"]
+	localizer = gq["localizer"]
+	pou = gq["pou"]
+	u_loc = localizer.localize_vector_array(u, omega_star_space)
+	T1 = T - B.dot(B.conj().T).dot(M_sparse.dot(T))
+	maxval = operator_svd2(T1, S, M_sparse)[0][0]
+	sum += maxval**2*ldict["csi"]**2
+rs6 = gq["continuity_constant"]/gq["inf_sup_constant"]* np.sqrt(sum) *4* norm(u)
+
+
+
+
+
+sum = 0
+for space in gq["spaces"]:
+	ldict = lq[space]
+	basis = bases[space]
+	omega_star_space = ldict["omega_star_space"]
+	localizer = gq["localizer"]
+	u_loc = localizer.localize_vector_array(u, omega_star_space)
+	local_norm = induced_norm(ldict["omega_star_product"])
+	sum += local_norm(u_loc)**2
+ls = np.sqrt(sum)
+rs = 4 *norm(u)
+
+
+
+h1_product = d.h1_product.assemble()
+
+norm_h1 = induced_norm(h1_product)
+sum = 0
+sum2 = 0
+for space in gq["spaces"]:
+	ldict = lq[space]
+	basis = bases[space]
+	range_space = ldict["range_space"]
+	omega_star_space = ldict["omega_star_space"]
+	localizer = gq["localizer"]
+	range_k = localizer.localize_operator(k_prod, range_space, range_space)
+	omstar_k = localizer.localize_operator(k_prod, omega_star_space, omega_star_space)
+
+	range_h1 = localizer.localize_operator(h1_product, range_space, range_space)
+	omstar_h1 = localizer.localize_operator(h1_product, omega_star_space, omega_star_space)
+
+	u_loc = localizer.localize_vector_array(u, range_space)
+	local_norm = induced_norm(range_h1)
+	sum += local_norm(u_loc)**2
+	sum2 += norm_h1(localizer.globalize_vector_array(u_loc, range_space))**2
+ls = np.sqrt(sum)
+ls2 = np.sqrt(sum2)
+rs = norm_h1(u)
+
+
+
+h1_product = d.h1_product.assemble()
+
+norm_h1 = induced_norm(h1_product)
+sum = 0
+sum2 = 0
+for space in gq["spaces"]:
+	ldict = lq[space]
+	basis = bases[space]
+	range_space = ldict["range_space"]
+	omega_star_space = ldict["omega_star_space"]
+	localizer = gq["localizer"]
+	range_k = localizer.localize_operator(k_prod, range_space, range_space)
+	omstar_k = localizer.localize_operator(k_prod, omega_star_space, omega_star_space)
+
+	range_h1 = localizer.localize_operator(h1_product, range_space, range_space)
+	omstar_h1 = localizer.localize_operator(h1_product, omega_star_space, omega_star_space)
+
+	u_loc = localizer.localize_vector_array(u, omega_star_space)
+	local_norm = induced_norm(omstar_h1)
+	sum += local_norm(u_loc)**2
+ls = np.sqrt(sum)
+rs = norm_h1(u)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+space = gq["spaces"][13]
+ldict = lq[space]
+basis = bases[space]
+M = ldict["range_product"]._matrix
+S = ldict["source_product"]._matrix
+M_sparse = scipy.sparse.csr_matrix(M)
+T = ldict["transfer_matrix_robin"]
+B = basis._array.T
+range_space = ldict["range_space"]
+localizer = gq["localizer"]
+pou = gq["pou"]
+u_loc = pou[range_space](localizer.localize_vector_array(u, range_space))
+u_s = ldict["local_solution_robin"]
+u_dif = u_loc-u_s
+term = u_dif.data.T - B.dot(B.conj().T).dot(M_sparse.dot(u_dif.data.T))
+u_i = localizer.globalize_vector_array(NumpyVectorArray(term.T), range_space)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+it=30
+n=15
+k=6
+boundary= 'dirichlet'
+cglob = 0
+rang = np.arange(-3.,3.,.5)
+yrang = None
+resolution = 50
+coarse_grid_resolution = 10
+
+#c/err
+if yrang is None:
+	yrang = rang
+err_r = np.zeros((len(rang),len(yrang)))
+err_r1 = np.zeros((len(rang),len(yrang)))
+err_r2 = np.zeros((len(rang),len(yrang)))
+err_r3 = np.zeros((len(rang),len(yrang)))
+p = helmholtz(boundary = boundary)
+xi = 0
+for x in rang:
+	yi = 0
+	for y in yrang:
+		c = x+1j*y
+		print c
+		mus = {'k': k, 'c_glob': cglob, 'c_loc': c}
+		gq, lq = localize_problem(p, coarse_grid_resolution, resolution, mus = mus)
+		d = gq["d"]
+		u = d.solve(mus)
+		u = d.solve(mus)
+		def knorm(u):
+			return np.sqrt(d.h1_semi_norm(u)**2+k**2*d.l2_norm(u)**2)
+		e_r = []
+		e_r1 = []
+		e_r2 = []
+		e_r3 = []
+		for i in range(it):
+			print i,
+			sys.stdout.flush()
+			bases = create_bases2(gq,lq,n,transfer = 'robin')
+			ru_r = reconstruct_solution(gq, lq, bases)
+			del bases
+			dif_r = u-ru_r
+			e_r.append(d.h1_norm(dif_r)[0]/d.h1_norm(u)[0])
+			e_r1.append(d.h1_semi_norm(dif_r)[0]/d.h1_semi_norm(u)[0])
+			e_r2.append(d.l2_norm(dif_r)[0]/d.l2_norm(u)[0])
+			e_r3.append(knorm(dif_r)[0]/knorm(u)[0])
+		err_r[xi][yi]=np.mean(e_r)
+		err_r1[xi][yi]=np.mean(e_r1)
+		err_r2[xi][yi]=np.mean(e_r2)
+		err_r3[xi][yi]=np.mean(e_r3)
+		yi+=1
+	xi+=1
+X,Y = np.meshgrid(rang, yrang)
+data = np.vstack([X.T.ravel(),Y.T.ravel(),err_r.ravel(), err_r1.ravel(), err_r2.ravel(), err_r3.ravel()]).T
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+from matplotlib import cm
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+surf = ax.plot_surface(X,Y,err_r,  cstride = 1, rstride =1, cmap = cm.coolwarm, linewidth=0, antialiased=False)
+fig.colorbar(surf, shrink =0.5, aspect=5)
+plt.show()
