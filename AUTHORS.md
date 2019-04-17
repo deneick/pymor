@@ -13,6 +13,10 @@
 * Linus Balicki, linus.balicki@ovgu.de
     * improve projection shifts for low-rank ADI method for Lyapunov equations
 
+* Dennis Eickhorn, d.eickhorn@uni-muenster.de
+    * fixed complex norms in vectorarrays.interfaces
+    * randomized range approximation algorithms in algorithms.randrangefinder
+
 
 ## pyMOR 0.5
 

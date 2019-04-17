@@ -59,7 +59,7 @@ def gram_schmidt(A, product=None, return_R=False, atol=1e-13, rtol=1e-13, offset
         A = A.copy()
 
     # main loop
-    R = np.eye(len(A))
+    R = np.eye(len(A), dtype = A.data.dtype)
     remove = []  # indices of to be removed vectors
     for i in range(offset, len(A)):
         # first calculate norm
