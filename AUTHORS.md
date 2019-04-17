@@ -15,6 +15,7 @@
 
 * Dennis Eickhorn, d.eickhorn@uni-muenster.de
     * randomized range approximation algorithms in algorithms.randrangefinder
+    * fixed complex norms in vectorarrays.interfaces
 
 
 ## pyMOR 0.5
