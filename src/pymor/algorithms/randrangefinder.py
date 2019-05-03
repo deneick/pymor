@@ -28,8 +28,8 @@ def adaptive_rrf(A, source_product=None, range_product=None, tol=1e-4,
     .. math::
         \Vert A - P_{span(B)} A \Vert \leq tol
 
-    with a failure probability smaller than `failure_tolerance`, where the inner product of the range
-    of `A` is given by `range_product` and the inner product of the source of `A`
+    with a failure probability smaller than `failure_tolerance`, where the inner product of the
+    range of `A` is given by `range_product` and the inner product of the source of `A`
     is given by `source_product`.
 
     Parameters
@@ -144,16 +144,13 @@ def rrf(A, source_product=None, range_product=None, q=2, l=8, iscomplex=False):
 def approximate_operatornorm(A, source_product=None, range_product=None, q=20, iscomplex=False):
     """Randomized approximation of the operator norm of `A`.
 
-    Given the |Operator| `A`, the return value of this method is an estimate of the operator norm of `A`.
+    Given the |Operator| `A`, the return value of this method is an estimate
+    of the operator norm of `A`.
 
     Parameters
     ----------
     A
         The |Operator| A.
-    source_product
-        Inner product |Operator| of the source of A.
-    range_product
-        Inner product |Operator| of the range of A.
     q
         The number of power iterations.
     iscomplex
@@ -165,8 +162,6 @@ def approximate_operatornorm(A, source_product=None, range_product=None, q=20, i
         An estimate of the operator norm of A.
     """
 
-    assert source_product is None or isinstance(source_product, OperatorInterface)
-    assert range_product is None or isinstance(range_product, OperatorInterface)
     assert isinstance(A, OperatorInterface)
 
     x = A.source.random(distribution='normal')
@@ -177,11 +172,7 @@ def approximate_operatornorm(A, source_product=None, range_product=None, q=20, i
 
     for i in range(q):
         y = A.apply(x)
-        if range_product is not None:
-            y = range_product.apply(y)
         x = A.apply_adjoint(y)
-        if source_product is not None:
-            x = source_product.apply_inverse(x)
         snorm = x.norm()
         if snorm == 0:
             return 0

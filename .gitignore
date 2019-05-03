@@ -3,6 +3,7 @@
 *.svg
 *.vtu
 *.tar.gz
+*.ipynb
 
 # C extensions
 *.so
