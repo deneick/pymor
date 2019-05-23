@@ -23,12 +23,13 @@ install_suggests = {'ipython>=3.0': 'an enhanced interactive python shell',
                     'pyopengl': 'fast solution visualization for builtin discretizations (PySide also required)',
                     'pyamg': 'algebraic multigrid solvers',
                     'pyevtk>=1.1': 'writing vtk output',
+                    'pygmsh': 'python frontend for gmsh',
                     _PYTEST: 'testing framework required to execute unit tests',
                     'PyQt5': 'solution visualization for builtin discretizations',
                     'pillow': 'image library used for bitmap data functions'}
 doc_requires = ['sphinx>=1.5', 'cython', 'numpy']
-travis_requires = ['pytest-cov', 'pytest-xdist', 'check-manifest', 'python-coveralls', 'pytest-travis-fold',
-                   'readme_renderer[md]', 'rstcheck', 'codecov', 'twine']
+ci_requires = ['pytest-cov', 'pytest-xdist', 'check-manifest', 
+               'readme_renderer[md]', 'rstcheck', 'codecov', 'twine']
 import_names = {'ipython': 'IPython',
                 'pytest-cache': 'pytest_cache',
                 'pytest-instafail': 'pytest_instafail',
@@ -39,8 +40,9 @@ import_names = {'ipython': 'IPython',
                 _pymess('1.0.0', 3, 6, False): 'pymess',
                 _pymess('1.0.0', 3, 7, False): 'pymess',
                 'pyopengl': 'OpenGL'}
+# Slycot is pinned due to buildsystem changes + missing wheels
 optional_requirements_file_only = [_pymess('1.0.0', 3, 6),_pymess('1.0.0', 3, 7),
-                    'slycot>=0.3.3', 'mpi4py']
+                    'slycot==0.3.3', 'mpi4py']
 
 
 def strip_markers(name):
@@ -88,7 +90,8 @@ def extras():
 
     return {
         'full': [_ex(f) for f in _candidates(blacklist=[])],
-        'travis':  travis_requires,
+        'ci':  ci_requires,
+        'docs': doc_requires,
     }
 
 toml_tpl = '''
@@ -111,18 +114,10 @@ if __name__ == '__main__':
         for module in sorted(set(itertools.chain(tests_require, optional_requirements_file_only,
                                                  install_suggests.keys()))):
             req.write(module+'\n')
-    with open(os.path.join(os.path.dirname(__file__), 'requirements-rtd.txt'), 'wt') as req:
-        rtd = '''# This file is sourced by readthedocs.org to install missing dependencies.
-# We need a more recent version of Sphinx for being able to provide
-# our own docutils.conf.'''
-        req.write(rtd+'\n')
-        req.write(note+'\n')
-        for module in sorted(doc_requires):
-            req.write(module+'\n')
-    with open(os.path.join(os.path.dirname(__file__), 'requirements-travis.txt'), 'wt') as req:
+    with open(os.path.join(os.path.dirname(__file__), 'requirements-ci.txt'), 'wt') as req:
         req.write('-r requirements.txt\n')
         req.write(note+'\n')
-        for module in sorted(travis_requires):
+        for module in sorted(ci_requires):
             req.write(module+'\n')
     with open(os.path.join(os.path.dirname(__file__), 'pyproject.toml'), 'wt') as toml:
         toml.write(note)

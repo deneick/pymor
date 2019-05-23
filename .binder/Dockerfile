@@ -1,4 +1,3 @@
-# repo2docker only considers a Dockerfile in the toplevel of the repo
 # the docker container for binder needs pymor installed entirely inside
 # the container, local dev needs it in path from mounted src
 # we trick docker into fulfilling both roles via a conditional ONBUILD
@@ -10,7 +9,7 @@ FROM pymor/testing:$PYVER as image_binder
 ONBUILD ADD . /pymor
 
 FROM pymor/testing:$PYVER as image_dev
-ONBUILD RUN echo "dev image uses mounted pymor"
+ONBUILD RUN echo "dev image uses mounted pymor" && mkdir /pymor
 ONBUILD ENV PYTHONPATH=/pymor/src:${PYTHONPATH}
 
 # select "base" image according to build arg
@@ -32,7 +31,7 @@ ADD requirements*.txt /tmp/
 RUN /bin/bash -c "pip install jupyterlab && \
     pip install -r /tmp/requirements-optional.txt && \
     [[ -e /pymor/setup.py ]] && pip install /pymor || echo 'no install needed'"
-
+ADD .binder/dev-entrypoint.bash /usr/local/bin/
 USER ${NB_USER}
 
 ENV JUPYTER_TOKEN=${PYMOR_JUPYTER_TOKEN} \

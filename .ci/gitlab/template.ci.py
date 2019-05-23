@@ -40,6 +40,17 @@ numpy 3.6:
     variables:
         PYMOR_PYTEST_MARKER: "numpy"
 
+docs:
+    extends: .test_base
+    image: pymor/testing:3.6
+    stage: test
+    script: .ci/gitlab/test_docs.bash
+    artifacts:
+        name: "$CI_JOB_STAGE-$CI_COMMIT_REF_SLUG"
+        expire_in: 3 months
+        paths:
+            - docs/_build/html
+
 {%- for py, m in matrix %}
 {{m}} {{py}}:
     extends: .pytest
@@ -91,7 +102,7 @@ submit numpy 3.6:
         DOCKER_DRIVER: overlay2
     before_script:
         - apk --update add openssh-client rsync git file bash python3
-        - pip3 install jinja2
+        - pip3 install jinja2 jupyter-repo2docker
         - 'export SHARED_PATH="${CI_PROJECT_DIR}/shared"'
         - mkdir -p ${SHARED_PATH}
     services:
@@ -105,6 +116,12 @@ pip {{OS.replace('_', ' ')}}:
     stage: deploy
     script: docker build -f .ci/docker/install_checks/{{OS}}/Dockerfile .
 {% endfor %}
+
+# this should ensure binderhubs can still build a runnable image from our repo
+repo2docker:
+    extends: .docker-in-docker
+    stage: deploy
+    script: repo2docker --user-id 2000 --user-name juno --no-run --debug .
 
 .wheel:
     extends: .docker-in-docker
